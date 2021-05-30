@@ -185,13 +185,17 @@
 ![2ndDesign](https://user-images.githubusercontent.com/76420081/120094078-375ca280-c159-11eb-9585-e9b75b84611f.png)
     - 판매취소에 대한 보상처리 추가
 
-### 2차 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
-#### 시나리오 Coverage Check (1)
+### 요구사항 검증 (기능적/비기능적 )
+#### 주문 시나리오
 ![1stReview](https://user-images.githubusercontent.com/81946287/118766395-546eb700-b8b7-11eb-8330-a26f30c69072.png)
+![1stReview](https://user-images.githubusercontent.com/76420081/120094271-4f80f180-c15a-11eb-9b7a-85aa63161be6.png)
+    - 주문에 따른 입고예정까지 잘 오는지 확인
+    - 최종 입고확정시, 주문시스템의 주문상태 변경되는지 확인
 
-#### 시나리오 Coverage Check (2)
-![2ndReview](https://user-images.githubusercontent.com/81946287/118766439-62243c80-b8b7-11eb-825d-9fcc9635607c.png)
-
+#### 상품마스터
+![2ndReview](https://user-images.githubusercontent.com/76420081/120094350-ccac6680-c15a-11eb-8c51-75855ca1eb5b.png)
+    - 본사(주문)시스템에서 가격정책 변경시, 점포=>판매시스템까지 잘 변경되는지 확인
+    
 #### 비기능 요구사항 coverage
 ![3rdReview](https://user-images.githubusercontent.com/81946287/118766471-6cded180-b8b7-11eb-9c00-dcaec093281c.png)
 
