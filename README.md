@@ -844,6 +844,19 @@ kubectl create deploy gateway --image=laios/gateway:1
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
 ```
 
+#### 로컬 minikube배포시, deployment.yml 설정
+```
+...
+spec:
+	...
+    spec:
+      containers:
+        - name: station
+          image: laios/station:v1
+          imagePullPolicy: Never
+		  ...
+```
+
 ##### 배포 결과
 ![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
 
