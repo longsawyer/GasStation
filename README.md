@@ -804,8 +804,37 @@ EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yam
   
 ##### 배포 명령어
 ```
-$ kubectl apply -f deployment.yml
-$ kubectl apply -f service.yaml
+cd d:\projects\gasstation\Order\
+mvn package -B
+docker build -t laios/order:3 .
+docker push laios/order:3
+cd d:\projects\gasstation\Order\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Station\
+mvn package -B
+docker build -t laios/station:3 .
+docker push laios/station:3
+cd d:\projects\gasstation\station\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\POS\
+mvn package -B
+docker build -t laios/pos:3 .
+docker push laios/pos:3
+cd d:\projects\gasstation\pos\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Logistics\
+mvn package -B
+docker build -t laios/logistics:3 .
+docker push laios/logistics:3
+cd d:\projects\gasstation\logistics\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
 ```
 
 ##### 배포 결과
