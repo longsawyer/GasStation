@@ -218,7 +218,8 @@
     - 판매취소되면, 보상처리로 취소된 판매분만큼 매출집계에서 제외한다
 
 ## 헥사고날 아키텍처 다이어그램 도출
-![hexagonal1](https://user-images.githubusercontent.com/81946287/118779966-88050d80-b8c6-11eb-88dc-74be433e6f17.png)
+![hexagonal1](https://user-images.githubusercontent.com/76420081/120095897-7c85d200-c163-11eb-868d-a802b71a1386.png)
+
 
 ## 신규 서비스 추가 시 기존 서비스에 영향이 없도록 열린 아키택처 설계
 - 신규 개발 조직 추가 시, 기존의 마이크로 서비스에 수정이 발생하지 않도록 Inbund 요청을 REST 가 아닌 Event를 Subscribe 하는 방식으로 구현하였다.
