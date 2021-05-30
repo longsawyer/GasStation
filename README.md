@@ -222,10 +222,12 @@
 
 
 ## 신규 서비스 추가 시 기존 서비스에 영향이 없도록 열린 아키택처 설계
-- 신규 개발 조직 추가 시, 기존의 마이크로 서비스에 수정이 발생하지 않도록 Inbund 요청을 REST 가 아닌 Event를 Subscribe 하는 방식으로 구현하였다.
+- 신규 개발 조직 추가시
+  - 기존의 마이크로 서비스에 수정이 발생하지 않도록 Inbund 요청을 REST 가 아닌 Event를 Subscribe 하는 방식으로 구현하였다.
 - 기존 마이크로 서비스에 대하여 아키텍처, 데이터베이스 구조와 관계 없이 추가할 수 있다.
+- 예시는, 위탁수수료 정산시스템이며 매장이 본사에게 운영위탁을 맺은 관리인을 위한 위탁수수료정산 시스템이다
 
-![hexagonal2](https://user-images.githubusercontent.com/81946287/118780023-97845680-b8c6-11eb-89d3-01fabd32fbfa.png)
+![hexagonal2](https://user-images.githubusercontent.com/76420081/120096055-4a28a480-c164-11eb-86d6-4fc52c86db3e.png)
 
 
 
