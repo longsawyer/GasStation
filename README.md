@@ -72,7 +72,8 @@
     - 판매처리와 동시에, 점포시스템의 재고감소처리한다
     - 판매취소와 동시에, 점포시스템의 재고증가처리한다
 1. 장애격리
-    - 점포시스템이 장애나도 POS를 통해서 판매가능하다
+    - 점포시스템은 본사시스템과 별개로 운영가능하다
+    - 주문/배송 또한 별개 시스템
 1. 성능
     - 주문자는 주문 진행상태를 수시로 확인한다 (CQRS)
     - 점포매니저는 재고총계/판매총계을 수시로 확인한다 (CQRS)
@@ -196,7 +197,9 @@
     - 본사(주문)시스템에서 가격정책 변경시, 점포=>판매시스템까지 잘 변경되는지 확인
     
 #### 비기능 요구사항 coverage
-![3rdReview](https://user-images.githubusercontent.com/81946287/118766471-6cded180-b8b7-11eb-9c00-dcaec093281c.png)
+![3rdReview](https://user-images.githubusercontent.com/76420081/120094463-7c81d400-c15b-11eb-8ad1-64a7c00f8d4c.png)
+    - 판매 즉시 재고에 반영
+    - 점포, POS시스템등은 별개로 운영가능
 
 ## 헥사고날 아키텍처 다이어그램 도출
 ![hexagonal1](https://user-images.githubusercontent.com/81946287/118779966-88050d80-b8c6-11eb-88dc-74be433e6f17.png)
