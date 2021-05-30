@@ -160,33 +160,30 @@
 * MSAEz 로 모델링한 이벤트스토밍 결과:  
   - [GasStation.zip](https://github.com/longsawyer/GasStation/files/6565788/GasStation.zip)
 
-### 이벤트 도출
-![Event](https://user-images.githubusercontent.com/81946287/118763908-9d247100-b8b3-11eb-992f-f930e774b284.png)
+### 이벤트
+![Event](https://user-images.githubusercontent.com/76420081/120093917-4e4ec500-c158-11eb-9764-8414454df296.png)
 
-### 폴리시,어그리게잇 부착
-![Policy](https://user-images.githubusercontent.com/81946287/118763987-bb8a6c80-b8b3-11eb-9fe4-81c8f0380262.png)
-    -가입신청, 서비스관리센터, 설치 부분을 정의함
+### 어그리게잇
+![Policy](https://user-images.githubusercontent.com/76420081/120093951-7807ec00-c158-11eb-9b06-b73fe786264d.png)
+    - 주문, 재고, 계정, 판매, 배송 등을 정의함
 
-### 액터, 커맨드 부착
-![Command](https://user-images.githubusercontent.com/81946287/118764046-d1982d00-b8b3-11eb-9f90-87bf95f1660e.png)
+### 폴리시,커맨드
+![Command](https://user-images.githubusercontent.com/76420081/120093981-a38ad680-c158-11eb-8291-0f90f28e126a.png)
+![Command](https://user-images.githubusercontent.com/76420081/120094000-b9989700-c158-11eb-99dc-9461762d92e7.png)
 
+### 액터
+![actor](https://user-images.githubusercontent.com/76420081/120094009-c5845900-c158-11eb-86c0-d35a72043817.png)
 
-### 바운디드 컨텍스트로 묶기
-![BoundedContext](https://user-images.githubusercontent.com/81946287/118764169-099f7000-b8b4-11eb-9b65-acc48be3d56c.png)
-    - 도메인 서열 분리 : 가입신청 -> 서비스관리센터 -> 설치 순으로 정의
+### 바운디드 컨텍스트, 컨텍스트 매핑 (파란색점선 Pub/Sub, 빨간색실선 Req/Res)
+![BoundedContext](https://user-images.githubusercontent.com/76420081/120094015-d2a14800-c158-11eb-9431-7ae2b46f8779.png)
+  - 도메인 서열 분리 : 점포->주문-> 물류->판매 순으로 정리
        
-### View모델 추가 및 폴리시의 이동과 컨텍스트 매핑 (파란색점선은 Pub/Sub, 빨간색실선은 Req/Resp)
-![AddView](https://user-images.githubusercontent.com/81946287/118764287-38b5e180-b8b4-11eb-997c-92032adf193d.png)
+### 1차 완료
+![firstDesign](https://user-images.githubusercontent.com/76420081/120094067-22800f00-c159-11eb-8572-0c2be3148bdc.png)
 
-### 완성된 1차 모형
-![firstDesign](https://user-images.githubusercontent.com/81946287/118764341-4d927500-b8b4-11eb-8345-71254fe30f70.png)
-
-### 수정된 2차 모형
-![2ndDesign](https://user-images.githubusercontent.com/81946287/118765229-bc240280-b8b5-11eb-8bf4-2015470e7987.png)
-
-    - 시나리오 내용을 매끄럽게 반영하기 위해 '서비스관리센터'를 '배정' 으로 변경
-    - 가입신청과 동시에 자동 배정되는 요구사항에 따라 Manager 액터가 불필요하여 제거
-    - 고객이 실시간 상태 확인을 위한 View 모델 배치
+### 2차 수정
+![2ndDesign](https://user-images.githubusercontent.com/76420081/120094078-375ca280-c159-11eb-9585-e9b75b84611f.png)
+    - 판매취소에 대한 보상처리 추가
 
 ### 2차 완성본에 대한 기능적/비기능적 요구사항을 커버하는지 검증
 #### 시나리오 Coverage Check (1)
