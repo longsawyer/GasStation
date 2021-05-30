@@ -811,25 +811,19 @@ $ kubectl apply -f service.yaml
 ##### 배포 결과
 ![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
 
-## 동기식 호출 / 서킷 브레이킹 / 장애격리
-
-* 서킷 브레이킹 프레임워크의 선택
+## 동기식호출 /서킷브레이킹 /장애격리
+- 서킷 브레이킹 프레임워크의 선택
   - Spring FeignClient + Hystrix 옵션을 사용하여 구현할 경우, 도메인 로직과 부가 기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다.
-
 - istio 설치
 
-
 ![image](https://user-images.githubusercontent.com/76420081/119083009-2665b000-ba3a-11eb-8a43-aeb9b7e7db98.png)
-
 ![image](https://user-images.githubusercontent.com/76420081/119083153-6331a700-ba3a-11eb-9543-475bb812c176.png)
-
 ![image](https://user-images.githubusercontent.com/76420081/119083538-1b5f4f80-ba3b-11eb-952d-89e7d7adec23.png)
 http://acdf28d4a2a744330ad8f7db4e05aeac-1896393867.ap-southeast-2.elb.amazonaws.com:20001/
-
 ![image](https://user-images.githubusercontent.com/76420081/119086647-c292b580-ba40-11eb-9450-7b47e4128157.png)
 
-
+```
  root@labs--2007877942:/home/project# curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.7.1 TARGET_ARCH=x86_64 sh -
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
@@ -866,12 +860,12 @@ root@labs--2007877942:/home/project# cd istio-1.7.1/
 root@labs--2007877942:/home/project/istio-1.7.1# export PATH=$PWD/bin:$PATH
 root@labs--2007877942:/home/project/istio-1.7.1# istioctl install --set profile=demo --set hub=gcr.io/istio-release
 
-✔ Istio core installed                                                                            
-✔ Istiod installed                                                                                
-✔ Ingress gateways installed                                                                                                                                                                                         
-✔ Egress gateways installed                                                                                                                                                                                          
-✔ Installation complete                                                                                                                 
-
+Istio core installed                                                                            
+Istiod installed                                                                                
+Ingress gateways installed                                                                                                                                                   
+Egress gateways installed                                                                                                                                                       
+Installation complete                                                                                                                 
+```
 
 - istio 에서 서킷브레이커 설정(DestinationRule)
 ```
