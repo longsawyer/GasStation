@@ -947,6 +947,52 @@ spec:
 - minikube는 EXTERNAL-IP가 펜딩됨 
 - 테스트하려면, "minikube tunnel" 실행
 
+
+## 동기식호출 /서킷브레이킹 /장애격리(minikube)
+- 서킷 브레이킹 프레임워크의 선택
+  - Spring FeignClient + Hystrix 옵션을 사용할 경우, 도메인 로직과 부가기능 로직이 서비스에 같이 구현된다.
+  - istio를 사용해서 서킷 브레이킹 적용이 가능하다
+##### istio 설치
+* 윈도우용 설치 
+    * https://github.com/istio/istio/releases 
+* 다운로드
+![image](https://user-images.githubusercontent.com/76420081/120057671-edec5480-c07f-11eb-992c-0a1a87bef616.png)
+* Path 추가
+![image](https://user-images.githubusercontent.com/76420081/120057686-fe043400-c07f-11eb-9b3b-86b7f924a044.png)
+* helm 명령실행
+    * https://istio.io/latest/docs/setup/install/helm/
+```
+istio폴더로 이동
+kubectl create namespace istio-system
+helm repo update
+helm install istio-base manifests/charts/base -n istio-system
+helm install istiod manifests/charts/istio-control/istio-discovery -n istio-system
+helm install istio-ingress manifests/charts/gateways/istio-ingress -n istio-system
+helm install istio-egress manifests/charts/gateways/istio-egress -n istio-system
+kubectl get pods -n istio-system
+kubectl label namespace default istio-injection=enabled
+``` 
+![image](https://user-images.githubusercontent.com/76420081/120057752-81be2080-c080-11eb-88fe-3928d9a41ef4.png)
+
+##### kiali 설치
+````
+vi samples/addons/kiali.yaml
+    4라인의 apiVersion: apiextensions.k8s.io/v1beta1을 apiVersion: apiextensions.k8s.io/v1으로 수정
+kubectl apply -f samples/addons
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
+kubectl edit svc kiali -n istio-system
+    :%s/ClusterIP/LoadBalancer/g
+    :wq!
+kubectl get all -n istio-system
+모니터링 시스템(kiali) 접속 : EXTERNAL-IP:20001 (admin/admin)
+````
+![image](https://user-images.githubusercontent.com/76420081/120109025-a7434b00-c1a2-11eb-9ee8-37de6e4641ed.png)
+![image](https://user-images.githubusercontent.com/76420081/120109065-cb9f2780-c1a2-11eb-8972-e1cdfc03bde0.png)
+![image](https://user-images.githubusercontent.com/76420081/120109114-0608c480-c1a3-11eb-9835-20b4b0bfe66c.png)
+![image](https://user-images.githubusercontent.com/76420081/120109164-3cdeda80-c1a3-11eb-84de-a075e1f8f626.png)
+![image](https://user-images.githubusercontent.com/76420081/120109208-67c92e80-c1a3-11eb-85c8-41af46ea2708.png)
+
+
 ## 동기식호출 /서킷브레이킹 /장애격리
 - 서킷 브레이킹 프레임워크의 선택
   - Spring FeignClient + Hystrix 옵션을 사용하여 구현할 경우, 도메인 로직과 부가 기능 로직이 서비스에 같이 구현된다.
