@@ -747,35 +747,33 @@ public class PolicyHandler{
     - 주문<br>
     ![image](https://user-images.githubusercontent.com/76420081/120099773-4e5ebd00-c178-11eb-8bf1-cbcab534980b.png)
     
-주문시스템 이벤트
-```
-```
-
 
 ## API Gateway
 
-API Gateway를 통하여, 마이크로 서비스들의 진입점을 통일한다.
-
+API Gateway를 통하여, 마이크로 서비스들 진입점을 통일한다.
+- application.yml 파일에 라우팅 경로 설정
 ```
-# application.yml 파일에 라우팅 경로 설정
-
 spring:
-  profiles: default
+  profiles: docker
   cloud:
     gateway:
       routes:
+        - id: POS
+          uri: http://POS:8080
+          predicates:
+            - Path=/sales/**,/prodcutMenus/**,cancelSales/**
+        - id: Station
+          uri: http://Station:8080
+          predicates:
+            - Path=/stockFlows,/**/accounts/**,/productMasters/**,/stockSummaries/**,/salesSummaries/**
         - id: Order
-          uri: http://localhost:8081
+          uri: http://Order:8080
           predicates:
-            - Path=/orders/**,/order/**,/orderStatuses/**
-        - id: Assignment
-          uri: http://localhost:8082
+            - Path=/orders/**,/prodcuts/**,/orderStatuses/**
+        - id: Logistics
+          uri: http://Logistics:8080
           predicates:
-            - Path=/assignments/**,/assignment/** 
-        - id: Installation
-          uri: http://localhost:8083
-          predicates:
-            - Path=/installations/**,/installation/** 
+            - Path=/shipments/** 
       globalcors:
         corsConfigurations:
           '[/**]':
@@ -795,16 +793,15 @@ server:
 - API Gateway는 Service type을 LoadBalancer로 설정하여 외부 호출에 대한 라우팅을 처리한다.
 
 
-
 # 운영
-
 ## CI/CD 설정
 ### 빌드/배포
 각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 ECR저장소에 올린다.   
 EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
-  - 코드 형상관리 : https://github.com/llyyjj99/PurifierRentalPJT 하위 repository에 각각 구성   
+  - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
   - 운영 플랫폼 : AWS의 EKS(Elastic Kubernetes Service)   
   - Docker Image 저장소 : AWS의 ECR(Elastic Container Registry)
+  
 ##### 배포 명령어
 ```
 $ kubectl apply -f deployment.yml
