@@ -1,6 +1,7 @@
 # GasStation Project
-![image](https://user-images.githubusercontent.com/76420081/120092233-42f59c80-c14c-11eb-97cc-9b89645fec1b.png)
 - 주유소 판매/물류 프로젝트입니다
+![image](https://user-images.githubusercontent.com/76420081/120092243-5b65b700-c14c-11eb-8356-03083e54f0c2.png)
+
 
 # Table of contents
 
