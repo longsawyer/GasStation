@@ -242,10 +242,13 @@
 	cd Order
 	mvn spring-boot:run
 
-	cd Assignment
+	cd Station
 	mvn spring-boot:run
 
-	cd Installation
+	cd POS
+	mvn spring-boot:run
+	
+	cd Logistics
 	mvn spring-boot:run
 
 
@@ -254,61 +257,40 @@
 
 ## DDD 의 적용
 
-- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: Order, Assignment, Installation
-- Assignment(배정) 마이크로서비스 예시
+- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: Order, Shipment, StockFlow, Sale, Product, Account
+- Order(주문) 마이크로서비스 예시
 
 ```
-	package purifierrentalpjt;
+package gasstation;
+...
+import gasstation.event.Ordered;
 
-	import javax.persistence.*;
-	import org.springframework.beans.BeanUtils;
-	
-	import lombok.Getter;
-	import lombok.Setter;
-	
-	import java.util.List;
-	import java.util.Date;
+/**
+ * 주문
+ * @author Administrator
+ */
+@Entity
+@Table(name="T_ORDER")
+public class Order {
 
-	@Entity
-	@Getter
-	@Setter
-	@Table(name="Assignment_table")
-	public class Assignment {
-		
-		@Id
-    		@GeneratedValue(strategy=GenerationType.AUTO)
-    		private Long id;
-    		private Long orderId;
-    		private String installationAddress;
-    		private Long engineerId;
-    		private String engineerName;
-    		private String status;
-
-    		@PostPersist
-    		public void onPostPersist(){
-        
-        		System.out.println(this.getStatus() + "POST TEST");
-        
-        		if(this.getStatus().equals("orderRequest")) {
-
-            		  EngineerAssigned engineerAssigned = new EngineerAssigned();
-
-            		  engineerAssigned.setId(this.getId()); 
-            		  engineerAssigned.setOrderId(this.getId()); 
-            		  engineerAssigned.setInstallationAddress(this.getInstallationAddress()); 
-            		  engineerAssigned.setEngineerId(this.getEngineerId()); 
-            		  engineerAssigned.setEngineerName(this.getEngineerName()); 
-            
-            		  BeanUtils.copyProperties(this, engineerAssigned);
-            		  engineerAssigned.publishAfterCommit();
-
-        		} else if (this.getStatus().equals("installationComplete")) {
-
-            		  JoinCompleted joinCompleted = new JoinCompleted();
-
-            		  joinCompleted.setId(this.getId()); 
-            		  joinCompleted.setOrderId(this.orderId); 
-            		  joinCompleted.setStatus(this.getStatus());
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long 	orderId;
+    private String 	productId;		// 유종
+    private String 	productName;	// 유종명
+    private Double 	qty;			// 수량			
+    private String 	destAddr;		// 배송지
+    private String 	orderDate;		// 주문일자
+    
+    @PostPersist
+    public void onPostPersist(){
+        Ordered ordered = new Ordered();
+        BeanUtils.copyProperties(this, ordered);
+        ordered.publishAfterCommit();
+    }
+   
+    ...
+}
 ```
 
 적용 후 REST API의 테스트
