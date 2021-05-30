@@ -806,35 +806,42 @@ EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yam
 ```
 cd d:\projects\gasstation\Order\
 mvn package -B
-docker build -t laios/order:3 .
-docker push laios/order:3
+docker build -t laios/order:1 .
+docker push laios/order:1
 cd d:\projects\gasstation\Order\kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yaml
 
 cd d:\projects\gasstation\Station\
 mvn package -B
-docker build -t laios/station:3 .
-docker push laios/station:3
+docker build -t laios/station:1 .
+docker push laios/station:1
 cd d:\projects\gasstation\station\kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yaml
 
 cd d:\projects\gasstation\POS\
 mvn package -B
-docker build -t laios/pos:3 .
-docker push laios/pos:3
+docker build -t laios/pos:1 .
+docker push laios/pos:1
 cd d:\projects\gasstation\pos\kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yaml
 
 cd d:\projects\gasstation\Logistics\
 mvn package -B
-docker build -t laios/logistics:3 .
-docker push laios/logistics:3
+docker build -t laios/logistics:1 .
+docker push laios/logistics:1
 cd d:\projects\gasstation\logistics\kubernetes
 kubectl apply -f deployment.yml
 kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Gateway\
+mvn package -B
+docker build -t laios/Gateway:1.
+docker push laios/Gateway:1
+kubectl create deploy gateway --image=laios/gateway:1
+kubectl expose deployment gateway --type=LoadBalancer --port=8080
 ```
 
 ##### 배포 결과
