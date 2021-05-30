@@ -257,7 +257,8 @@
 
 ## DDD 의 적용
 
-- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다: Order, Shipment, StockFlow, Sale, Product, Account
+- 각 서비스내에 도출된 핵심 Aggregate Root 객체를 Entity 로 선언하였다
+  - Order, Shipment, StockFlow, Sale, Product, Account
 - Order(주문) 마이크로서비스 예시
 
 ```
