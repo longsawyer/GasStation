@@ -894,9 +894,37 @@ kubectl apply -f service.yaml
 
 cd d:\projects\gasstation\Gateway\
 mvn package -B
-docker build -t laios/Gateway:1.
-kubectl create deploy gateway --image=laios/gateway:1
+docker build -t laios/gateway:1 .
+cd d:\projects\gasstation\kube\
+kubectl apply -f gateway.yml
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
+minikube service gateway
+```
+
+```
+## gateway.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:                
+  name: gateway
+  labels:
+    app: gateway 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:     
+      app: gateway
+  template:
+    metadata:
+      labels:
+        app: gateway
+    spec:
+      containers:
+      - name: gateway          
+        image: laios/gateway:1
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 8080
 ```
 
 #### deployment.yml 설정(minikube)
@@ -914,6 +942,11 @@ spec:
 
 ##### 배포 결과(minikube)
 ![image](https://user-images.githubusercontent.com/76420081/120104314-d2bc3a80-c18e-11eb-9b46-915ad71e8da0.png)
+![image](https://user-images.githubusercontent.com/76420081/120104797-35aed100-c191-11eb-9c87-e410a1e1270c.png)
+![image](https://user-images.githubusercontent.com/76420081/120105983-339b4100-c196-11eb-82f8-637fad278a26.png)
+![image](https://user-images.githubusercontent.com/76420081/120106014-54639680-c196-11eb-9639-8581f20f0d33.png)
+- minikube는 EXTERNAL-IP가 펜딩됨 
+- 테스트하려면, "minikube service 서비스명" 실행
 
 ## 동기식호출 /서킷브레이킹 /장애격리
 - 서킷 브레이킹 프레임워크의 선택
