@@ -1,12 +1,9 @@
-# PurifierRentalPJT
-21년 1차수 3조
-# PurifierRentalProject (정수기렌탈 서비스)
-
-3조 정수기 렌탈 신청 서비스 프로젝트 입니다.
+# GasStation Project
+주유소 판매/물류 프로젝트입니다
 
 # Table of contents
 
-- [pirifierRentalProject (정수기 렌탈 신청 서비스)](#---)
+- [GasStation Project (주유소 판매시스템)](#---)
   - [서비스 시나리오](#서비스-시나리오)
   - [체크포인트](#체크포인트)
   - [분석/설계](#분석설계)
