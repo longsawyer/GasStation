@@ -345,7 +345,7 @@ REST API 테스트
       ![image](https://user-images.githubusercontent.com/76420081/120098306-28cdb580-c170-11eb-941e-b7d7d3d88d4b.png)
     - 주문<br>
       ![image](https://user-images.githubusercontent.com/76420081/120098323-3be08580-c170-11eb-917d-b6164fae6ee7.png)
-      ![image](https://user-images.githubusercontent.com/76420081/120098363-6d595100-c170-11eb-86a1-417fb4b5fefa.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098946-ae069980-c173-11eb-8d60-fb424f49a1e5.png)
     - 물류<br>
       ![image](https://user-images.githubusercontent.com/76420081/120098355-629ebc00-c170-11eb-9963-acc010d8035a.png)
     - 점포<br>
