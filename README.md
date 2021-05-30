@@ -366,8 +366,10 @@ REST API 테스트
 - 다양한 데이터소스 유형 (RDB or NoSQL) 적용 시 데이터 객체에 @Entity 가 아닌 @Document로 마킹 후, 
   - 기존의 Entity Pattern / Repository Pattern 적용과 데이터베이스 제품의 설정 (application.yml) 만으로 가능하다.
 
+order시스템 설정예시
+
+- application.yml - mongodb 설정
 ```
--- application.yml, order, mongodb 예시
 spring:
   profiles: default
   ...
@@ -383,14 +385,12 @@ spring:
       uri: mongodb://localhost:27017/tutorial
 ```
 
+- Repository 설정
 ```
-package gasstation.repo;
-
-import java.util.Optional;
+...
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import gasstation.Product;
 
 @RepositoryRestResource(collectionResourceRel="product", path="product")
 //public interface ProductRepository extends PagingAndSortingRepository<Product, Long>{
@@ -401,20 +401,10 @@ public interface ProductRepository extends MongoRepository<Product, String>{
 }
 ```
 
+- VO설정
 ```
-package gasstation;
-
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.PostPersist;
-import javax.persistence.PostUpdate;
-import javax.persistence.Table;
-
-import org.springframework.beans.BeanUtils;
+...
 import org.springframework.data.mongodb.core.mapping.Document;
-import gasstation.event.ProductChanged;
 
 //@Entity
 //@Table(name="T_PRODUCT_M")
@@ -457,7 +447,6 @@ public class Product {
          productChanged.publish();
     }
     ...
-
 }
 
 ```
@@ -473,24 +462,18 @@ public class Product {
 - POS에서 매출취소처리하면, 이에 대한 보정처리로 보상거래를 태운다(fallback처리)
 
 설치 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현
+- POS - StationService.java
 ```
-# 
-// POS, StationService.java
-package gasstation.external;
-
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-
+...
 @FeignClient(name="Station", url="${external.url}")
 public interface StationService {
     @RequestMapping(path="/stockFlows", method= RequestMethod.POST)
     public boolean outcome(@RequestBody StockFlow stockFlow);
-
 }
+```
 
-// POS, application.yml
+- POS - application.yml
+```
 server:
   port: 8080
 ---
@@ -511,7 +494,7 @@ external:
   url: http://Station:8080
 ```
 
-POS 매출취소에 대한, 점포시 재고보정
+- POS 매출취소에 대한, 점포시 재고보정
 ```
 package gasstation.policy;
 ...
@@ -547,11 +530,9 @@ public class PolicyHandler{
 }
 ```
 
-POS 매출취소에 대한, 점포시 매출집계보정
+- POS 매출취소에 대한, 점포시 매출집계보정
 ```
-
 package gasstation.policy;
-
 ...
 
 /**
@@ -588,22 +569,18 @@ public class SalesSummaryViewHandler {
         	logger.error("감소시길 재고집계내역이 없음");
         }
     }
-
-	...
-
+    ...
 }
 
 ```
 
-POS 매출취소에 대한, 점포시 재고집계보정
+- POS 매출취소에 대한, 점포시 재고집계보정
 ```
-
 package gasstation.policy;
 ...
-
 @Service
 public class StockSummaryViewHandler {
-	private Logger logger =LoggerFactory.getLogger(getClass());
+    private Logger logger =LoggerFactory.getLogger(getClass());
     @Autowired	private StockSummaryRepository stockSummaryRepository;
     @Autowired	private StockFlowController stockFlowController;
     
@@ -613,9 +590,7 @@ public class StockSummaryViewHandler {
      */
     @StreamListener(KafkaProcessor.INPUT)
     public void wheneverCanceledSold_cancelStock(@Payload CanceledSold canceledSold){
-
         if(!canceledSold.validate()) return;
-
         logger.info("\n\n##### listener CanceledSold : " + canceledSold.toJson() + "\n\n");
 
         // 재고흐름 추가
@@ -625,9 +600,8 @@ public class StockSummaryViewHandler {
         // DAO를 쓰지 않고, 재고관련 프로세스가 있는 cmd controll을 쓴다
         stockFlowController.outcome(stockFlow);
     }
-	...
+    ...
 }
-
 ```
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
@@ -636,15 +610,12 @@ public class StockSummaryViewHandler {
 - 비동기식으로 처리되므로 물류 배송처리를 위해서 주문이 블로킹되지 않는다
 - 이를 위해서 주문이 이루어진후, 주문 도메인이벤트를 카프카로 송출한다.
 
+구현
+- 주문
 ```
-/**
- * 주문
- * @author Administrator
- */
 @Entity
 @Table(name="T_ORDER")
 public class Order {
-
     @Id
     @GeneratedValue(strategy=GenerationType.AUTO)
     private Long 	orderId;
@@ -660,16 +631,15 @@ public class Order {
         BeanUtils.copyProperties(this, ordered);
         ordered.publishAfterCommit();
     }
-	...
+    ...
 }
-
 ```
 
 - 물류시스템은 주문됨 이벤트를 PolicyHandler로 수신한다
 ```
 @Service
 public class PolicyHandler{
-	private Logger logger =Logger.getGlobal();
+    private Logger logger =Logger.getGlobal();
     @Autowired ShipmentRepository shipmentRepository;
 
     /**
@@ -689,19 +659,12 @@ public class PolicyHandler{
         shipment.setCarNumber("CAR#" + Math.round( Math.random()*1000));
         shipmentRepository.save(shipment);
     }
-
-    @StreamListener(KafkaProcessor.INPUT)
-    public void whatever(@Payload String eventString){}
-
+    ...
 }
 ```
 
 - 물류시스템은 배송처리되면, 배송됨 이벤트를 카프카에 송출한다
 ```
-/**
- * 배송
- * @author Administrator
- */
 @Entity
 @Table(name="T_SHIPMENT")
 public class Shipment {
@@ -721,9 +684,8 @@ public class Shipment {
         BeanUtils.copyProperties(this, shipped);
         shipped.publishAfterCommit();
     }
-	...
+    ...
 }
-
 ```
 
 - 점포시스템은 배송됨 이벤트를 PolicyHandler로 수신한다
@@ -737,7 +699,6 @@ public class PolicyHandler{
 
     @StreamListener(KafkaProcessor.INPUT)
     public void wheneverShipped_ReserveIncome(@Payload Shipped shipped){
-
         if(!shipped.validate()) return;
 
         logger.info("\n\n##### listener ReserveIncome : " + shipped.toJson() + "\n\n");
@@ -761,30 +722,50 @@ public class PolicyHandler{
 - 물류/주문 시스템이 내려가도 점포의 판매/재고처리에 영향받지 않는다
 
 ## CQRS
+주문상태 조회서비스를 CQRS 패턴으로 구현하였다
+- Order,Station,Logistics 개별 aggregate 통합 조회로 인한 성능 저하를 막을 수 있다.
+- 모든 정보는 비동기 방식으로처리된다. 즉 발행된 이벤트를 수신하여 처리된다.
+- 설계: MSAEz 설계의 view 매핑 설정 참조
 
-가입신청 상태 조회를 위한 서비스를 CQRS 패턴으로 구현하였다.
-- Order, Assignment, Installation 개별 aggregate 통합 조회로 인한 성능 저하를 막을 수 있다.
-- 모든 정보는 비동기 방식으로 발행된 이벤트를 수신하여 처리된다.
-- 설계 : MSAEz 설계의 view 매핑 설정 참조
-
+5. 주문(전)
+    - 주문<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098187-6bdb5900-c16f-11eb-8747-962404a0441e.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098202-7d246580-c16f-11eb-85ff-9e0895025fd5.png)
+    - 점포
+      ![image](https://user-images.githubusercontent.com/76420081/120098240-a6dd8c80-c16f-11eb-8e8d-efedcf2b8b66.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098249-b9f05c80-c16f-11eb-808a-0e7668492a81.png)
+6. 주문(후)
+    - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station" <br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098287-050a6f80-c170-11eb-8486-5383b4b0fd12.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120099730-1ce5f180-c178-11eb-99aa-7abc9c1b775e.png)
+    - 주문<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098323-3be08580-c170-11eb-917d-b6164fae6ee7.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098946-ae069980-c173-11eb-8d60-fb424f49a1e5.png)
+    - 물류<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120099271-8e707080-c175-11eb-81e7-100289eab8cb.png)
+    - 점포<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098382-88c45c00-c170-11eb-92b3-c3b434c6627e.png)
+7. 주문확정
+    - http -f POST http://localhost:8082/stocks/confirmStock orderId=1 <br>
+    ![image](https://user-images.githubusercontent.com/76420081/120098546-7e569200-c171-11eb-89c8-371fbc49550e.png)
+    ![image](https://user-images.githubusercontent.com/76420081/120099755-32f3b200-c178-11eb-9d45-c66ede426b45.png)
+    - 점포<br>
+    ![image](https://user-images.githubusercontent.com/76420081/120098566-9b8b6080-c171-11eb-8109-3e4498ef481d.png)
+    - 주문<br>
+    ![image](https://user-images.githubusercontent.com/76420081/120099773-4e5ebd00-c178-11eb-8bf1-cbcab534980b.png)
 - 주문생성
-
 ![image](https://user-images.githubusercontent.com/76420081/119001165-b23df480-b9c6-11eb-9d62-bed7406f0709.png)
 
 - 카프카 메시지
-
 ![image](https://user-images.githubusercontent.com/76420081/119001370-df8aa280-b9c6-11eb-867f-fbd78ab89031.png)
 
 - 주문취소
-
 ![image](https://user-images.githubusercontent.com/76420081/119001667-25476b00-b9c7-11eb-8609-c6a7e9a02dfe.png)
 
 - 카프카 메시지
-
 ![image](https://user-images.githubusercontent.com/76420081/119001720-32645a00-b9c7-11eb-81aa-58191e7bef1d.png)
 
 - 뷰테이블 수신처리
-
 ![image](https://user-images.githubusercontent.com/76420081/119002598-fa114b80-b9c7-11eb-9aac-ed6ac136be4c.png)
 
 
