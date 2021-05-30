@@ -952,6 +952,7 @@ spec:
 - 서킷 브레이킹 프레임워크의 선택
   - Spring FeignClient + Hystrix 옵션을 사용할 경우, 도메인 로직과 부가기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다
+
 ##### istio 설치
 * 윈도우용 설치 
     * https://github.com/istio/istio/releases 
@@ -974,6 +975,36 @@ kubectl label namespace default istio-injection=enabled
 ``` 
 ![image](https://user-images.githubusercontent.com/76420081/120057752-81be2080-c080-11eb-88fe-3928d9a41ef4.png)
 
+![image](https://user-images.githubusercontent.com/76420081/120110025-f1c6c680-c1a6-11eb-9513-7b72d40fe97d.png)
+```
+cd D:\projects\gasstation\kube
+kubectl apply -f circuit_breaker.yaml
+```
+
+circuit_breaker.yaml
+```
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: order
+spec:
+  host: order
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1           # 목적지로 가는 HTTP, TCP connection 최대 값. (Default 1024)
+      http:
+        http1MaxPendingRequests: 1  # 연결을 기다리는 request 수를 1개로 제한 (Default 
+        maxRequestsPerConnection: 1 # keep alive 기능 disable
+        maxRetries: 3               # 기다리는 동안 최대 재시도 수(Default 1024)
+    outlierDetection:
+      consecutiveErrors: 5          # 5xx 에러가 5번 발생하면
+      interval: 1s                  # 1초마다 스캔 하여
+      baseEjectionTime: 30s         # 30 초 동안 circuit breaking 처리   
+      maxEjectionPercent: 100       # 100% 로 차단
+```
+
+
 ##### kiali 설치
 ````
 vi samples/addons/kiali.yaml
@@ -985,12 +1016,22 @@ kubectl edit svc kiali -n istio-system
     :wq!
 kubectl get all -n istio-system
 모니터링 시스템(kiali) 접속 : EXTERNAL-IP:20001 (admin/admin)
+    http://127.0.0.1:20001/
 ````
-![image](https://user-images.githubusercontent.com/76420081/120109025-a7434b00-c1a2-11eb-9ee8-37de6e4641ed.png)
-![image](https://user-images.githubusercontent.com/76420081/120109065-cb9f2780-c1a2-11eb-8972-e1cdfc03bde0.png)
+![image](https://user-images.githubusercontent.com/76420081/120109025-a7434b00-c1a2-11eb-9ee8-37de6e4641ed.png) <br> 
+![image](https://user-images.githubusercontent.com/76420081/120109065-cb9f2780-c1a2-11eb-8972-e1cdfc03bde0.png) <br>
 ![image](https://user-images.githubusercontent.com/76420081/120109114-0608c480-c1a3-11eb-9835-20b4b0bfe66c.png)
 ![image](https://user-images.githubusercontent.com/76420081/120109164-3cdeda80-c1a3-11eb-84de-a075e1f8f626.png)
-![image](https://user-images.githubusercontent.com/76420081/120109208-67c92e80-c1a3-11eb-85c8-41af46ea2708.png)
+![image](https://user-images.githubusercontent.com/76420081/120109847-1ff7d680-c1a6-11eb-9606-a7818cc68005.png)
+![image](https://user-images.githubusercontent.com/76420081/120109887-52093880-c1a6-11eb-9ee0-9a35d453fa65.png)
+
+##### minikube dashboard
+```
+minikube dashboard
+```
+![image](https://user-images.githubusercontent.com/76420081/120110419-5171a180-c1a8-11eb-9707-fb7ca3a99f2d.png)
+![image](https://user-images.githubusercontent.com/76420081/120110448-79610500-c1a8-11eb-91cf-69398dbe2d57.png)
+
 
 
 ## 동기식호출 /서킷브레이킹 /장애격리
