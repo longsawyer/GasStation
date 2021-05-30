@@ -862,6 +862,8 @@ Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, servic
 ```
 minikube docker-env | Invoke-Expression
 
+kubectl delete deploy,svc,pod --all
+
 cd d:\projects\gasstation\Order\
 mvn package -B
 docker build -t laios/order:1 .
