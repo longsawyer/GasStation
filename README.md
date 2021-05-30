@@ -758,20 +758,20 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: POS
-          uri: http://POS:8080
+        - id: pos
+          uri: http://pos:8080
           predicates:
             - Path=/sales/**,/prodcutMenus/**,cancelSales/**
-        - id: Station
-          uri: http://Station:8080
+        - id: station
+          uri: http://station:8080
           predicates:
-            - Path=/stockFlows,/**/accounts/**,/productMasters/**,/stockSummaries/**,/salesSummaries/**
-        - id: Order
-          uri: http://Order:8080
+            - Path=/stockFlows/**,/accounts/**,/productMasters/**,/stockSummaries/**,/salesSummaries/**
+        - id: order
+          uri: http://order:8080
           predicates:
             - Path=/orders/**,/prodcuts/**,/orderStatuses/**
-        - id: Logistics
-          uri: http://Logistics:8080
+        - id: logistics
+          uri: http://logistics:8080
           predicates:
             - Path=/shipments/** 
       globalcors:
@@ -898,7 +898,7 @@ docker build -t laios/gateway:1 .
 cd d:\projects\gasstation\kube\
 kubectl apply -f gateway.yml
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
-minikube tunnel
+minikube service gateway
 ```
 
 ```
@@ -1046,6 +1046,7 @@ pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상�
 
 이때, 재기동 제어값인 /tmp/healthy파일을 강제로 지워 liveness가 pod를 비정상 상태라고 판단하도록 하였다.    
 5번 재시도 후에도 파드가 뜨지 않았을 경우 CrashLoopBackOff 상태가 됨을 확인하였다.   
+
 ##### order에 Liveness 적용한 내용
 ```yaml
 apiVersion: apps/v1
@@ -1073,8 +1074,7 @@ kind: Deployment
 
 
 ### 오토스케일 아웃
-
-- 가입신청 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 1프로를 넘어서면 replica 를 10개까지 늘려준다.
+- 주문 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 1프로를 넘어서면 replica 를 10개까지 늘려준다.
 ```
 kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=1
 ```
@@ -1082,14 +1082,12 @@ kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=1
 - 오토스케일이 어떻게 되고 있는지 모니터링을 걸어준다.
 ```
 kubectl get deploy order -w
-
 kubectl get hpa order -w
 ```
 
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
 siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
-
 
 ```
 
@@ -1100,9 +1098,7 @@ siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-sout
 
 
 ## 무정지 재배포
-
 * 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 서킷브레이커 설정을 제거함
-
 - seige 로 배포작업 직전에 워크로드를 모니터링 한다.
 ```
 siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
@@ -1118,7 +1114,6 @@ siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-sout
 
 
 ## ConfigMap 적용
-
 - 설정의 외부 주입을 통한 유연성을 제공하기 위해 ConfigMap을 적용한다.
 - orderstatus 에서 사용하는 mySQL(AWS RDS 활용) 접속 정보를 ConfigMap을 통해 주입 받는다.
 
@@ -1134,7 +1129,6 @@ EOF
 ```
 
 ## Secret 적용
-
 - username, password와 같은 민감한 정보는 ConfigMap이 아닌 Secret을 적용한다.
 - etcd에 암호화 되어 저장되어, ConfigMap 보다 안전하다.
 - value는 base64 인코딩 된 값으로 지정한다. (echo root | base64)
@@ -1157,7 +1151,6 @@ EOF
 
 ### 쿠버네티스 구조
 쿠버네티스는 Master Node(Control Plane)와 Worker Node로 구성된다.
-
 ![image](https://user-images.githubusercontent.com/64656963/86503139-09a29880-bde6-11ea-8706-1bba1f24d22d.png)
 
 
@@ -1218,11 +1211,12 @@ CloudWatch Logs 수집, 아카이브 스토리지 및 데이터 스캔 요금이
 
 
 # 시연
- 1. 정수기 렌탈 서비스 가입신청 -> installation 접수 완료 상태
- 2. 설치 기사 설치 완료 처리 -> 가입 신청 완료 상태
- 3. 가입 취소
- 4. EDA 구현
-   - Assignment 장애 상황에서 order(가입 신청) 정상 처리
-   - Assignment 정상 전환 시 수신 받지 못한 이벤트 처리
- 5. 무정지 재배포
- 6. 오토 스케일링
+ 1. 주문/재고주문신청 -> 물류/배송처리 -> 점포/입고예정처리
+ 2. 점포/입고완료처리 -> 주문/배송완료(received)처리
+ 3. POS/판매처리 -> 점포/재고감소,판매집계
+ 4. POS/판매취소 -> 점포/보상처리:재고증가,판매집계취소
+ 5. EDA 구현
+   - Order(본사)시스템 장애상황에서 POS판매처리 정상처리
+   - Order(본사)시스템 정상 전환시, 수신받지 못한 이벤트 처리 예)가격변경
+ 6. 무정지 재배포
+ 7. 오토 스케일링
