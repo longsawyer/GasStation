@@ -844,7 +844,45 @@ kubectl create deploy gateway --image=laios/gateway:1
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
 ```
 
-#### 로컬 minikube배포시, deployment.yml 설정
+##### 배포 명령어(minikube)
+push를 제외한다, 도커의 로컬빌드 이미지 그대로 이용하는 형태
+```
+cd d:\projects\gasstation\Order\
+mvn package -B
+docker build -t laios/order:1 .
+cd d:\projects\gasstation\Order\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Station\
+mvn package -B
+docker build -t laios/station:1 .
+cd d:\projects\gasstation\station\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\POS\
+mvn package -B
+docker build -t laios/pos:1 .
+cd d:\projects\gasstation\pos\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Logistics\
+mvn package -B
+docker build -t laios/logistics:1 .
+cd d:\projects\gasstation\logistics\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Gateway\
+mvn package -B
+docker build -t laios/Gateway:1.
+kubectl create deploy gateway --image=laios/gateway:1
+kubectl expose deployment gateway --type=LoadBalancer --port=8080
+```
+
+#### deployment.yml 설정(minikube)
 ```
 ...
 spec:
@@ -857,7 +895,7 @@ spec:
 		  ...
 ```
 
-##### 배포 결과
+##### 배포 결과(minikube)
 ![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
 
 ## 동기식호출 /서킷브레이킹 /장애격리
