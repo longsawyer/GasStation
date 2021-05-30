@@ -158,7 +158,7 @@
 
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과:  
-  - http://www.msaez.io/#/storming/IkrhsmX1DtOtbLQM9ri9QJ9uoRm2/every/ee3188d76ffc9344628b8a9183bcc9b1
+  - [GasStation.zip](https://github.com/longsawyer/GasStation/files/6565788/GasStation.zip)
 
 ### 이벤트 도출
 ![Event](https://user-images.githubusercontent.com/81946287/118763908-9d247100-b8b3-11eb-992f-f930e774b284.png)
