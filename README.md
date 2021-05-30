@@ -511,7 +511,7 @@ external:
   url: http://Station:8080
 ```
 
-POS에서 받은 매출취소를 점포시스템(BOS=Station)에서 처리하는 부분
+POS 매출취소에 대한, 점포시 재고보정
 ```
 package gasstation.policy;
 ...
@@ -545,7 +545,10 @@ public class PolicyHandler{
     }
 	...
 }
+```
 
+POS 매출취소에 대한, 점포시 매출집계보정
+```
 
 package gasstation.policy;
 
@@ -590,6 +593,11 @@ public class SalesSummaryViewHandler {
 
 }
 
+```
+
+POS 매출취소에 대한, 점포시 재고집계보정
+```
+
 package gasstation.policy;
 ...
 
@@ -624,51 +632,133 @@ public class StockSummaryViewHandler {
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
 
-가입 신청(order)이 이루어진 후에 배정(Assignment) 서비스로 이를 알려주는 행위는 비동기식으로 처리하여, 배정(Assignment) 서비스의 처리를 위하여 가입신청(order)이 블로킹 되지 않도록 처리한다.
- 
-- 이를 위하여 가입 신청에 기록을 남긴 후에 곧바로 가입 신청이 되었다는 도메인 이벤트를 카프카로 송출한다.(Publish)
+주문이 이루어진후, 물류시스템에 비동기로 알려준다. 
+- 비동기식으로 처리되므로 물류 배송처리를 위해서 주문이 블로킹되지 않는다
+- 이를 위해서 주문이 이루어진후, 주문 도메인이벤트를 카프카로 송출한다.
+
 ```
-# (order) Order.java
+/**
+ * 주문
+ * @author Administrator
+ */
+@Entity
+@Table(name="T_ORDER")
+public class Order {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long 	orderId;
+    private String 	productId;		// 유종
+    private String 	productName;	// 유종명
+    private Double 	qty;			// 수량			
+    private String 	destAddr;		// 배송지
+    private String 	orderDate;		// 주문일자
+    
+    @PostPersist
+    public void onPostPersist(){
+        Ordered ordered = new Ordered();
+        BeanUtils.copyProperties(this, ordered);
+        ordered.publishAfterCommit();
+    }
+	...
+}
+
+```
+
+- 물류시스템은 주문됨 이벤트를 PolicyHandler로 수신한다
+```
+@Service
+public class PolicyHandler{
+	private Logger logger =Logger.getGlobal();
+    @Autowired ShipmentRepository shipmentRepository;
+
+    /**
+     * 주문이 발생했을때, 자동으로 배송발생
+     * @param ordered
+     */
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverOrdered_RequestOrder(@Payload Ordered ordered){
+
+        if(!ordered.validate()) return;
+
+        logger.info("\n\n##### listener RequestOrder : " + ordered.toJson() + "\n\n");
+
+        Shipment shipment = new Shipment();
+        BeanUtils.copyProperties(ordered, shipment);
+        // 차량번호는 임의생성
+        shipment.setCarNumber("CAR#" + Math.round( Math.random()*1000));
+        shipmentRepository.save(shipment);
+    }
+
+    @StreamListener(KafkaProcessor.INPUT)
+    public void whatever(@Payload String eventString){}
+
+}
+```
+
+- 물류시스템은 배송처리되면, 배송됨 이벤트를 카프카에 송출한다
+```
+/**
+ * 배송
+ * @author Administrator
+ */
+@Entity
+@Table(name="T_SHIPMENT")
+public class Shipment {
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
+    private Long shipId;
+    private Long orderId;
+    private String carNumber;
+    private String destAddr;
+    private String productId;
+    private String productName;
+    private Double qty;
 
     @PostPersist
     public void onPostPersist(){
-
-        JoinOrdered joinOrdered = new JoinOrdered();
-        BeanUtils.copyProperties(this, joinOrdered);
-        joinOrdered.publishAfterCommit();
+        Shipped shipped = new Shipped();
+        BeanUtils.copyProperties(this, shipped);
+        shipped.publishAfterCommit();
     }
-```
-- 배정 서비스에서는 가입신청 이벤트에 대해서 이를 수신하여 자신의 정책을 처리하도록 PolicyHandler 를 구현한다.
-```
-# (Assignment) PolicyHandler.java
+	...
+}
 
+```
+
+- 점포시스템은 배송됨 이벤트를 PolicyHandler로 수신한다
+```
 @Service
 public class PolicyHandler{
-    @Autowired AssignmentRepository assignmentRepository;
+    private Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired StockFlowRepository stockFlowRepository;
+    @Autowired AccountRepository accountRepository;
+    @Autowired ProductMasterRepository productMasterRepository;
 
     @StreamListener(KafkaProcessor.INPUT)
-    public void wheneverJoinOrdered_OrderRequest(@Payload JoinOrdered joinOrdered){
+    public void wheneverShipped_ReserveIncome(@Payload Shipped shipped){
 
-        if(!joinOrdered.validate()) return;
+        if(!shipped.validate()) return;
 
-        System.out.println("\n\n##### listener OrderRequest : " + joinOrdered.toJson() + "\n\n");
+        logger.info("\n\n##### listener ReserveIncome : " + shipped.toJson() + "\n\n");
 
-        Assignment assignment = new Assignment();
-
-        assignment.setId(joinOrdered.getId());
-        assignment.setInstallationAddress(joinOrdered.getInstallationAddress());
-        assignment.setStatus("orderRequest");
-        assignment.setEngineerName("Enginner" + joinOrdered.getId());
-        assignment.setEngineerId(joinOrdered.getId());
-        assignment.setOrderId(joinOrdered.getId());
-
-        assignmentRepository.save(assignment);
-        }
+        // 재고흐름 추가
+        StockFlow stockFlow = new StockFlow();
+        BeanUtils.copyProperties(shipped, stockFlow);
+        
+        // 아직 입고확정을 하지 않는다
+        // 입고확정은 사용자에게 받는다
+        stockFlow.setQtyToBe( stockFlow.getQty());
+        stockFlow.setQty( 0.0);
+        stockFlowRepository.save(stockFlow);
     }
+    ...
 }
 ```
-가입신청은 배정 서비스와 완전히 분리되어 있으며, 이벤트 수신에 따라 처리되기 때문에, 배정 서비스가 유지보수로 인해 잠시 내려간 상태라도 가입신청을 받는데 문제가 없다.
 
+주문신청은 주문,물류,점포 시스템과 분리되어 있으며, 중간 MQ이벤트 수신에 따라처리된다. 
+- 물류/점포 시스템이 내려가도 주문처리에 이상없다
+- 물류/주문 시스템이 내려가도 점포의 판매/재고처리에 영향받지 않는다
 
 ## CQRS
 
