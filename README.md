@@ -302,20 +302,61 @@ REST API 테스트
       - kafka-server-start.bat ../../config/server.properties --override delete.topic.enable=true
     - MQ모니터링
       - kafka-console-consumer.bat --bootstrap-server http://localhost:9092 --topic gasstation --from-beginning
-2. 서버기동(Order:주문만)
-    - 주문
-      - 기동 ![image](https://user-images.githubusercontent.com/76420081/120097803-772d8500-c16d-11eb-8f22-f2690f0cf473.png)
-  -  
-4. 휘발유 주문
-  - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station"
-  - http -f POST http://localhost:8082/stocks/confirmStock orderId=1
-![image](https://user-images.githubusercontent.com/76420081/118930671-00c8a000-b981-11eb-9af5-3619d4ceaedd.png)
-
-2) 카프카 메시지 확인
-- (a) 서비스 신청 후 : JoinOrdered -> EngineerAssigned -> InstallationAccepted
-- (b) 설치완료 처리 후 : InstallationCompleted
-![image](https://user-images.githubusercontent.com/76420081/118930569-df67b400-b980-11eb-8ad2-66e33a3a5993.png)
-
+2. 서버기동(Order:주문)
+    - 서버<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120097803-772d8500-c16d-11eb-8f22-f2690f0cf473.png)
+    - Kafka MQ
+      ![image](https://user-images.githubusercontent.com/76420081/120097876-cb386980-c16d-11eb-9202-e80d1098e595.png)
+    - Mongo DB
+      ![image](https://user-images.githubusercontent.com/76420081/120097908-ef944600-c16d-11eb-9210-568d957c6add.png)
+3. 서버기동(Station:점포)
+    - 서버<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120097957-397d2c00-c16e-11eb-96be-11bac161ce9d.png)
+    - Kafka MQ
+      ![image](https://user-images.githubusercontent.com/76420081/120097960-48fc7500-c16e-11eb-8b20-5094dec3fc6d.png)
+    - H2 Console
+      ![image](https://user-images.githubusercontent.com/76420081/120097991-7cd79a80-c16e-11eb-9923-37c002b24826.png)
+4. 서버기동(POS:판매)
+    - 서버<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098048-abee0c00-c16e-11eb-9d15-655dc9b2c7b4.png)
+    - Kafka MQ
+      ![image](https://user-images.githubusercontent.com/76420081/120098056-b9a39180-c16e-11eb-8773-c00643492a46.png)   
+    - H2 Console
+      ![image](https://user-images.githubusercontent.com/76420081/120098074-db047d80-c16e-11eb-819a-ce08ab83da00.png)
+4. 서비기동(물류)
+    - 서버<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098113-05eed180-c16f-11eb-867d-600740325c12.png)
+    - Kafka MQ
+      ![image](https://user-images.githubusercontent.com/76420081/120098118-0dae7600-c16f-11eb-90c9-bc946a66e35f.png)
+    - H2 Console
+      ![image](https://user-images.githubusercontent.com/76420081/120098137-29198100-c16f-11eb-9b6d-92c66bb06642.png)
+5. 주문(전)
+    - 주문<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098187-6bdb5900-c16f-11eb-8747-962404a0441e.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098202-7d246580-c16f-11eb-85ff-9e0895025fd5.png)
+    - 물류
+      ![image](https://user-images.githubusercontent.com/76420081/120098223-93cabc80-c16f-11eb-9634-8ddaeaf1d725.png)
+    - 점포
+      ![image](https://user-images.githubusercontent.com/76420081/120098240-a6dd8c80-c16f-11eb-8e8d-efedcf2b8b66.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098249-b9f05c80-c16f-11eb-808a-0e7668492a81.png)
+6. 주문(후)
+    - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station" <br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098287-050a6f80-c170-11eb-8486-5383b4b0fd12.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098306-28cdb580-c170-11eb-941e-b7d7d3d88d4b.png)
+    - 주문<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098323-3be08580-c170-11eb-917d-b6164fae6ee7.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120098363-6d595100-c170-11eb-86a1-417fb4b5fefa.png)
+    - 물류<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098355-629ebc00-c170-11eb-9963-acc010d8035a.png)
+    - 점포<br>
+      ![image](https://user-images.githubusercontent.com/76420081/120098382-88c45c00-c170-11eb-92b3-c3b434c6627e.png)
+7. 주문확정
+    - http -f POST http://localhost:8082/stocks/confirmStock orderId=1 <br>
+    ![image](https://user-images.githubusercontent.com/76420081/120098546-7e569200-c171-11eb-89c8-371fbc49550e.png)
+    ![image](https://user-images.githubusercontent.com/76420081/120098589-beb61000-c171-11eb-86af-dd2f42dfc8f6.png)
+    - 점포<br>
+    ![image](https://user-images.githubusercontent.com/76420081/120098566-9b8b6080-c171-11eb-8109-3e4498ef481d.png)
+    - 주문<br>
 
 ## 폴리글랏 퍼시스턴스
 - order, Assignment, installation 서비스 모두 H2 메모리DB를 적용하였다.  
