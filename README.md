@@ -342,21 +342,23 @@ REST API 테스트
 6. 주문(후)
     - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station" <br>
       ![image](https://user-images.githubusercontent.com/76420081/120098287-050a6f80-c170-11eb-8486-5383b4b0fd12.png)
-      ![image](https://user-images.githubusercontent.com/76420081/120098306-28cdb580-c170-11eb-941e-b7d7d3d88d4b.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120099730-1ce5f180-c178-11eb-99aa-7abc9c1b775e.png)
     - 주문<br>
       ![image](https://user-images.githubusercontent.com/76420081/120098323-3be08580-c170-11eb-917d-b6164fae6ee7.png)
       ![image](https://user-images.githubusercontent.com/76420081/120098946-ae069980-c173-11eb-8d60-fb424f49a1e5.png)
     - 물류<br>
-      ![image](https://user-images.githubusercontent.com/76420081/120098355-629ebc00-c170-11eb-9963-acc010d8035a.png)
+      ![image](https://user-images.githubusercontent.com/76420081/120099271-8e707080-c175-11eb-81e7-100289eab8cb.png)
     - 점포<br>
       ![image](https://user-images.githubusercontent.com/76420081/120098382-88c45c00-c170-11eb-92b3-c3b434c6627e.png)
 7. 주문확정
     - http -f POST http://localhost:8082/stocks/confirmStock orderId=1 <br>
     ![image](https://user-images.githubusercontent.com/76420081/120098546-7e569200-c171-11eb-89c8-371fbc49550e.png)
-    ![image](https://user-images.githubusercontent.com/76420081/120098589-beb61000-c171-11eb-86af-dd2f42dfc8f6.png)
+    ![image](https://user-images.githubusercontent.com/76420081/120099755-32f3b200-c178-11eb-9d45-c66ede426b45.png)
     - 점포<br>
     ![image](https://user-images.githubusercontent.com/76420081/120098566-9b8b6080-c171-11eb-8109-3e4498ef481d.png)
     - 주문<br>
+    ![image](https://user-images.githubusercontent.com/76420081/120099773-4e5ebd00-c178-11eb-8bf1-cbcab534980b.png)
+
 
 ## 폴리글랏 퍼시스턴스
 - order, Assignment, installation 서비스 모두 H2 메모리DB를 적용하였다.  
