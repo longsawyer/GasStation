@@ -166,7 +166,8 @@
 
 ### 어그리게잇
 ![Policy](https://user-images.githubusercontent.com/76420081/120093951-7807ec00-c158-11eb-9b06-b73fe786264d.png)
-    - 주문, 재고, 계정, 판매, 배송 등을 정의함
+- 처리내역
+  - 주문, 재고, 계정, 판매, 배송 등을 정의함
 
 ### 폴리시,커맨드
 ![Command](https://user-images.githubusercontent.com/76420081/120093981-a38ad680-c158-11eb-8291-0f90f28e126a.png)
@@ -177,6 +178,7 @@
 
 ### 바운디드 컨텍스트, 컨텍스트 매핑 (파란색점선 Pub/Sub, 빨간색실선 Req/Res)
 ![BoundedContext](https://user-images.githubusercontent.com/76420081/120094015-d2a14800-c158-11eb-9431-7ae2b46f8779.png)
+-처리내역
   - 도메인 서열 분리 : 점포->주문-> 물류->판매 순으로 정리
        
 ### 1차 완료
@@ -219,7 +221,6 @@
 ![hexagonal1](https://user-images.githubusercontent.com/81946287/118779966-88050d80-b8c6-11eb-88dc-74be433e6f17.png)
 
 ## 신규 서비스 추가 시 기존 서비스에 영향이 없도록 열린 아키택처 설계
-
 - 신규 개발 조직 추가 시, 기존의 마이크로 서비스에 수정이 발생하지 않도록 Inbund 요청을 REST 가 아닌 Event를 Subscribe 하는 방식으로 구현하였다.
 - 기존 마이크로 서비스에 대하여 아키텍처, 데이터베이스 구조와 관계 없이 추가할 수 있다.
 
