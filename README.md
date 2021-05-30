@@ -295,9 +295,20 @@ public class Order {
 ```
 
 REST API 테스트
-1) 휘발유 주문 & 입고확정
-- (a) http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station"
-- (b) http -f POST http://localhost:8082/stocks/confirmStock orderId=1
+1. 카프카 기동
+  - zookeeper
+    - zookeeper-server-start.bat ../../config/zookeeper.properties
+  - kafka
+    - kafka-server-start.bat ../../config/server.properties --override delete.topic.enable=true
+  - MQ모니터링
+    - kafka-console-consumer.bat --bootstrap-server http://localhost:9092 --topic gasstation --from-beginning
+2. 서버기동(Order:주문만)
+  -  주문
+    -  ![image](https://user-images.githubusercontent.com/76420081/120097803-772d8500-c16d-11eb-8f22-f2690f0cf473.png)
+  -  
+4. 휘발유 주문
+  - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station"
+  - http -f POST http://localhost:8082/stocks/confirmStock orderId=1
 ![image](https://user-images.githubusercontent.com/76420081/118930671-00c8a000-b981-11eb-9af5-3619d4ceaedd.png)
 
 2) 카프카 메시지 확인
