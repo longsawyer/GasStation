@@ -795,14 +795,14 @@ server:
 
 # 운영
 ## CI/CD 설정
-### 빌드/배포
+### 빌드/배포(AWS)
 각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 ECR저장소에 올린다.   
 EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
   - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
   - 운영 플랫폼 : AWS의 EKS(Elastic Kubernetes Service)   
   - Docker Image 저장소 : AWS의 ECR(Elastic Container Registry)
-  
-##### 배포 명령어
+
+##### 배포 명령어(AWS)
 ```
 cd d:\projects\gasstation\Order\
 mvn package -B
@@ -843,6 +843,15 @@ docker push laios/Gateway:1
 kubectl create deploy gateway --image=laios/gateway:1
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
 ```
+
+### 빌드/배포(minikube)
+각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 로컬저장소에 올린다.   
+Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
+  - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
+  - 운영 플랫폼 : minikube
+  - Docker Image 저장소 : 로컬저장소
+    - DockerHub에 올려서 클러스터에 올리는것은 별도로 확인함
+    - DockerHub 업로드 속도가 느려서 로컬이미지 이용으로 변경
 
 ##### 배포 명령어(minikube)
 - push를 제외한다, 도커의 로컬빌드 이미지 그대로 이용하는 형태
@@ -900,8 +909,6 @@ spec:
 
 ##### 배포 결과(minikube)
 ![image](https://user-images.githubusercontent.com/76420081/120104314-d2bc3a80-c18e-11eb-9b46-915ad71e8da0.png)
-
-
 ![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
 
 ## 동기식호출 /서킷브레이킹 /장애격리
