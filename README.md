@@ -187,7 +187,6 @@
 
 ### 요구사항 검증 (기능적/비기능적 )
 #### 주문 시나리오
-![1stReview](https://user-images.githubusercontent.com/81946287/118766395-546eb700-b8b7-11eb-8330-a26f30c69072.png)
 ![1stReview](https://user-images.githubusercontent.com/76420081/120094271-4f80f180-c15a-11eb-9b7a-85aa63161be6.png)
     - 주문에 따른 입고예정까지 잘 오는지 확인
     - 최종 입고확정시, 주문시스템의 주문상태 변경되는지 확인
