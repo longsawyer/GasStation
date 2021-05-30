@@ -294,15 +294,13 @@ public class Order {
 }
 ```
 
-적용 후 REST API의 테스트
-1) 정수기 렌탈 서비스 신청 & 설치완료 처리
-
-- (a) http -f POST localhost:8081/order/joinOrder productId=4 productName=PURI6 installationAddress="addr#6" customerId=506
-- (b) http -f PATCH http://localhost:8083/installations orderId=5 
+REST API 테스트
+1) 휘발유 주문 & 입고확정
+- (a) http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station"
+- (b) http -f POST http://localhost:8082/stocks/confirmStock orderId=1
 ![image](https://user-images.githubusercontent.com/76420081/118930671-00c8a000-b981-11eb-9af5-3619d4ceaedd.png)
 
 2) 카프카 메시지 확인
-
 - (a) 서비스 신청 후 : JoinOrdered -> EngineerAssigned -> InstallationAccepted
 - (b) 설치완료 처리 후 : InstallationCompleted
 ![image](https://user-images.githubusercontent.com/76420081/118930569-df67b400-b980-11eb-8ad2-66e33a3a5993.png)
