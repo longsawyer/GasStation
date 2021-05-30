@@ -361,84 +361,265 @@ REST API 테스트
 
 
 ## 폴리글랏 퍼시스턴스
-- order, Assignment, installation 서비스 모두 H2 메모리DB를 적용하였다.  
-다양한 데이터소스 유형 (RDB or NoSQL) 적용 시 데이터 객체에 @Entity 가 아닌 @Document로 마킹 후, 기존의 Entity Pattern / Repository Pattern 적용과 데이터베이스 제품의 설정 (application.yml) 만으로 가능하다.
+- Order,Station,POS,Logistics 서비스 모두 H2 메모리DB를 적용하였다.  
+- Order의 경우 로컬개발환경에서 MongoDB를 추가하였다 (상품마스터만 활용)
+- 다양한 데이터소스 유형 (RDB or NoSQL) 적용 시 데이터 객체에 @Entity 가 아닌 @Document로 마킹 후, 
+  - 기존의 Entity Pattern / Repository Pattern 적용과 데이터베이스 제품의 설정 (application.yml) 만으로 가능하다.
 
 ```
---application.yml // mariaDB 추가 예시
+-- application.yml, order, mongodb 예시
 spring:
-  profiles: real-db
-  datasource:
-        url: jdbc:mariadb://rds주소:포트명(기본은 3306)/database명
-        username: db계정
-        password: db계정 비밀번호
-        driver-class-name: org.mariadb.jdbc.Driver
+  profiles: default
+  ...
+          
+  #H2콘솔창 http://localhost:8083/h2-console
+  h2:
+    console:
+      enabled: true 
+      
+  #MongoDB
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/tutorial
 ```
 
-## 동기식 호출 과 Fallback 처리
+```
+package gasstation.repo;
 
-- 분석 단계에서의 조건 중 하나로 배정(Assignment) 서비스에서 인터넷 가입신청 취소를 요청 받으면, 
-설치(installation) 서비스 취소 처리하는 부분을 동기식 호출하는 트랜잭션으로 처리하기로 하였다. 
-- 호출 프로토콜은 이미 앞서 Rest Repository 에 의해 노출되어 있는 REST 서비스를 FeignClient 를 이용하여 호출하도록 한다.
+import java.util.Optional;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import gasstation.Product;
+
+@RepositoryRestResource(collectionResourceRel="product", path="product")
+//public interface ProductRepository extends PagingAndSortingRepository<Product, Long>{
+//}
+
+public interface ProductRepository extends MongoRepository<Product, String>{
+	Optional<Product> findByProductId( @Param("product_id") String productId);
+}
+```
+
+```
+package gasstation;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PostPersist;
+import javax.persistence.PostUpdate;
+import javax.persistence.Table;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.data.mongodb.core.mapping.Document;
+import gasstation.event.ProductChanged;
+
+//@Entity
+//@Table(name="T_PRODUCT_M")
+@Document(collection = "T_PRODUCT_M")
+public class Product {
+
+    @Id
+    private String id;
+    //@GeneratedValue(strategy=GenerationType.AUTO)
+    private String 	productId;		// 상품ID
+    private String 	productName;	// 상품명
+    private Long 	price;			// 가격
+
+    /**
+     * 상품정보 생성
+     */
+    @PostPersist
+    public void onPostPersist(){
+        ProductChanged productChanged = new ProductChanged();
+        BeanUtils.copyProperties(this, productChanged);
+        productChanged.publishAfterCommit();
+    }
+    
+    /**
+     * 상품정보 변경
+     */
+    @PostUpdate
+    public void onPostUpdate() {
+    	 ProductChanged productChanged = new ProductChanged();
+         BeanUtils.copyProperties(this, productChanged);
+         productChanged.publishAfterCommit();
+    }
+    
+    /**
+     * 강제전송용
+     */
+    public void fireEvent() {
+    	 ProductChanged productChanged = new ProductChanged();
+         BeanUtils.copyProperties(this, productChanged);
+         productChanged.publish();
+    }
+    ...
+
+}
+
+```
+![image](https://user-images.githubusercontent.com/76420081/120100025-81ee1700-c179-11eb-83b4-b5b674793f44.png)
+
+
+
+## 동기식 호출과 Fallback 처리
+
+- POS에서 매출처리시, 즉시 점포시스템(BOS)에서 즉시 재고감소처리를 한다.
+  - 동기식 처리
+    - 이부분은 POS에 심어진 FeignClient를 이용하여 점포시스템의 재고 REST서비스를 초출하도록 한다. 
+- POS에서 매출취소처리하면, 이에 대한 보정처리로 보상거래를 태운다(fallback처리)
 
 설치 서비스를 호출하기 위하여 Stub과 (FeignClient) 를 이용하여 Service 대행 인터페이스 (Proxy) 를 구현
 ```
-# (Assignment) InstallationService.java
+# 
+// POS, StationService.java
+package gasstation.external;
 
-	package purifierrentalpjt.external;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+@FeignClient(name="Station", url="${external.url}")
+public interface StationService {
+    @RequestMapping(path="/stockFlows", method= RequestMethod.POST)
+    public boolean outcome(@RequestBody StockFlow stockFlow);
+
+}
+
+// POS, application.yml
+server:
+  port: 8080
+---
+
+spring:
+  profiles: default
+  ...
+server:
+  port: 8081
+external:
+  url: http://localhost:8082
+---
+
+spring:
+  profiles: docker
+  ...
+external:
+  url: http://Station:8080
+```
+
+POS에서 받은 매출취소를 점포시스템(BOS=Station)에서 처리하는 부분
+```
+package gasstation.policy;
+...
+
+@Service
+public class PolicyHandler{
+    private Logger logger = LoggerFactory.getLogger(getClass());
 	
-	import org.springframework.cloud.openfeign.FeignClient;
-	import org.springframework.web.bind.annotation.RequestBody;
-	import org.springframework.web.bind.annotation.RequestMapping;
-	import org.springframework.web.bind.annotation.RequestMethod;
+    @Autowired StockFlowRepository stockFlowRepository;
+    @Autowired AccountRepository accountRepository;
+    @Autowired ProductMasterRepository productMasterRepository;
+	...
+    
+    /**
+     * 주문이 취소되면, 재고를 다시 증가시킨다
+     * @param canceledSold
+     */
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverCanceledSold_cancelStock(@Payload CanceledSold canceledSold){
 
-	/**
- 	 * 설치subsystem 동기호출
- 	 * @author Administrator
- 	 * 아래 주소는 Gateway주소임
- 	*/
+        if(!canceledSold.validate()) return;
+
+        logger.info("\n\n##### listener CanceledSold : " + canceledSold.toJson() + "\n\n");
+
+        // 재고흐름 추가
+        StockFlow stockFlow = new StockFlow();
+        BeanUtils.copyProperties(canceledSold, stockFlow);
+        
+        // 입고처리 ( 판매는 마이너스처리이므로...)
+        stockFlowRepository.save(stockFlow);
+    }
+	...
+}
 
 
-	@FeignClient(name="Installation", url="http://installation:8080")
-	//@FeignClient(name="Installation", url="http://localhost:8083")
-	public interface InstallationService {
+package gasstation.policy;
 
-		@RequestMapping(method= RequestMethod.POST, path="/installations")
-    		public void cancelInstallation(@RequestBody Installation installation);
+...
 
-	}
-```
+/**
+ * 판매뷰 핸들러
+ * @author Administrator
+ *
+ */
+@Service
+public class SalesSummaryViewHandler {
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-정수기 렌탈 서비스 가입 취소 요청(cancelRequest)을 받은 후, 처리하는 부분
-```
-# (Installation) InstallationController.java
+    @Autowired
+    private SalesSummaryRepository salesSummaryRepository;
+     ...
+    
+    /**
+     * 주문이 취소되면, 판매감소한다
+     * @param canceledSold
+     */
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverCanceledSold_cancelStock(@Payload CanceledSold canceledSold){
 
-	package purifierrentalpjt;
+    	if(!canceledSold.validate()) return;
 
-	@RestController
-	public class InstallationController {
+        logger.info("\n\n##### listener ChangeSalesSummary : " + canceledSold.toJson() + "\n\n");
+        
+        Optional<SalesSummary> opt =salesSummaryRepository.findById(canceledSold.getProductId());
+        if( opt.isPresent()) {
+        	SalesSummary salesSummary =opt.get();
+        	salesSummary.addQty(	-1* canceledSold.getQty());
+        	salesSummary.addAmount(	-1* canceledSold.getAmount());
+        	salesSummaryRepository.save(salesSummary);
+        } else {
+        	logger.error("감소시길 재고집계내역이 없음");
+        }
+    }
 
-    	  @Autowired
-    	  InstallationRepository installationRepository;
+	...
 
-    	  /**
-     	   * 설치취소
-     	   * @param installation
-           */
-	  @RequestMapping(method=RequestMethod.POST, path="/installations")
-    	  public void installationCancellation(@RequestBody Installation installation) {
-    	
-    		System.out.println( "### 동기호출 -설치취소=" +ToStringBuilder.reflectionToString(installation) );
+}
 
-    		Optional<Installation> opt = installationRepository.findByOrderId(installation.getOrderId());
-    		if( opt.isPresent()) {
-    			Installation installationCancel =opt.get();
-    			installationCancel.setStatus("installationCanceled");
-    			installationRepository.save(installationCancel);
-    		} else {
-    			System.out.println("### 설치취소 - 못찾음");
-    		}
-    	}
+package gasstation.policy;
+...
+
+@Service
+public class StockSummaryViewHandler {
+	private Logger logger =LoggerFactory.getLogger(getClass());
+    @Autowired	private StockSummaryRepository stockSummaryRepository;
+    @Autowired	private StockFlowController stockFlowController;
+    
+    /**
+     * 주문이 취소되면, 재고를 다시 증가시킨다
+     * @param canceledSold
+     */
+    @StreamListener(KafkaProcessor.INPUT)
+    public void wheneverCanceledSold_cancelStock(@Payload CanceledSold canceledSold){
+
+        if(!canceledSold.validate()) return;
+
+        logger.info("\n\n##### listener CanceledSold : " + canceledSold.toJson() + "\n\n");
+
+        // 재고흐름 추가
+        StockFlow stockFlow = new StockFlow();
+        BeanUtils.copyProperties(canceledSold, stockFlow);
+        
+        // DAO를 쓰지 않고, 재고관련 프로세스가 있는 cmd controll을 쓴다
+        stockFlowController.outcome(stockFlow);
+    }
+	...
+}
+
 ```
 
 ## 비동기식 호출 / 시간적 디커플링 / 장애격리 / 최종 (Eventual) 일관성 테스트
