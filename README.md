@@ -727,14 +727,11 @@ public class PolicyHandler{
 - 모든 정보는 비동기 방식으로처리된다. 즉 발행된 이벤트를 수신하여 처리된다.
 - 설계: MSAEz 설계의 view 매핑 설정 참조
 
-5. 주문(전)
+1. 주문(전)
     - 주문<br>
-      ![image](https://user-images.githubusercontent.com/76420081/120098187-6bdb5900-c16f-11eb-8747-962404a0441e.png)
       ![image](https://user-images.githubusercontent.com/76420081/120098202-7d246580-c16f-11eb-85ff-9e0895025fd5.png)
     - 점포
-      ![image](https://user-images.githubusercontent.com/76420081/120098240-a6dd8c80-c16f-11eb-8e8d-efedcf2b8b66.png)
-      ![image](https://user-images.githubusercontent.com/76420081/120098249-b9f05c80-c16f-11eb-808a-0e7668492a81.png)
-6. 주문(후)
+2. 주문(후)
     - http -f POST http://localhost:8083/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station" <br>
       ![image](https://user-images.githubusercontent.com/76420081/120098287-050a6f80-c170-11eb-8486-5383b4b0fd12.png)
       ![image](https://user-images.githubusercontent.com/76420081/120099730-1ce5f180-c178-11eb-99aa-7abc9c1b775e.png)
@@ -742,31 +739,17 @@ public class PolicyHandler{
       ![image](https://user-images.githubusercontent.com/76420081/120098323-3be08580-c170-11eb-917d-b6164fae6ee7.png)
       ![image](https://user-images.githubusercontent.com/76420081/120098946-ae069980-c173-11eb-8d60-fb424f49a1e5.png)
     - 물류<br>
-      ![image](https://user-images.githubusercontent.com/76420081/120099271-8e707080-c175-11eb-81e7-100289eab8cb.png)
     - 점포<br>
-      ![image](https://user-images.githubusercontent.com/76420081/120098382-88c45c00-c170-11eb-92b3-c3b434c6627e.png)
-7. 주문확정
+3. 주문확정
     - http -f POST http://localhost:8082/stocks/confirmStock orderId=1 <br>
-    ![image](https://user-images.githubusercontent.com/76420081/120098546-7e569200-c171-11eb-89c8-371fbc49550e.png)
     ![image](https://user-images.githubusercontent.com/76420081/120099755-32f3b200-c178-11eb-9d45-c66ede426b45.png)
     - 점포<br>
-    ![image](https://user-images.githubusercontent.com/76420081/120098566-9b8b6080-c171-11eb-8109-3e4498ef481d.png)
     - 주문<br>
     ![image](https://user-images.githubusercontent.com/76420081/120099773-4e5ebd00-c178-11eb-8bf1-cbcab534980b.png)
-- 주문생성
-![image](https://user-images.githubusercontent.com/76420081/119001165-b23df480-b9c6-11eb-9d62-bed7406f0709.png)
-
-- 카프카 메시지
-![image](https://user-images.githubusercontent.com/76420081/119001370-df8aa280-b9c6-11eb-867f-fbd78ab89031.png)
-
-- 주문취소
-![image](https://user-images.githubusercontent.com/76420081/119001667-25476b00-b9c7-11eb-8609-c6a7e9a02dfe.png)
-
-- 카프카 메시지
-![image](https://user-images.githubusercontent.com/76420081/119001720-32645a00-b9c7-11eb-81aa-58191e7bef1d.png)
-
-- 뷰테이블 수신처리
-![image](https://user-images.githubusercontent.com/76420081/119002598-fa114b80-b9c7-11eb-9aac-ed6ac136be4c.png)
+    
+주문시스템 이벤트
+```
+```
 
 
 ## API Gateway
