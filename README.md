@@ -187,19 +187,33 @@
     - 판매취소에 대한 보상처리 추가
 
 ### 요구사항 검증 (기능적/비기능적 )
-#### 주문 시나리오
-![1stReview](https://user-images.githubusercontent.com/76420081/120094271-4f80f180-c15a-11eb-9b7a-85aa63161be6.png)
+#### 주문(기능)
+![1stReview](https://user-images.githubusercontent.com/76420081/120095402-cf11bf00-c160-11eb-81cc-8c05c45744dc.png)
+- 처리내역
     - 주문에 따른 입고예정까지 잘 오는지 확인
     - 최종 입고확정시, 주문시스템의 주문상태 변경되는지 확인
 
-#### 상품마스터
-![2ndReview](https://user-images.githubusercontent.com/76420081/120094350-ccac6680-c15a-11eb-8c51-75855ca1eb5b.png)
+#### 상품마스터(기능)
+![2ndReview](https://user-images.githubusercontent.com/76420081/120095417-ddf87180-c160-11eb-9845-bbde16214946.png)
+- 처리내역
     - 본사(주문)시스템에서 가격정책 변경시, 점포=>판매시스템까지 잘 변경되는지 확인
     
-#### 비기능 요구사항 coverage
-![3rdReview](https://user-images.githubusercontent.com/76420081/120094463-7c81d400-c15b-11eb-8ad1-64a7c00f8d4c.png)
+#### 상품마스터(기능)
+![2ndReview](https://user-images.githubusercontent.com/76420081/120094350-ccac6680-c15a-11eb-8c51-75855ca1eb5b.png)
+- 처리내역
+    - 본사(주문)시스템에서 가격정책 변경시, 점포=>판매시스템까지 잘 변경되는지 확인
+    
+#### 판매처리(비기능)
+![3rdReview](https://user-images.githubusercontent.com/76420081/120095251-edc38600-c15f-11eb-85c8-51ee546f242e.png)
+- 처리내역
     - 판매 즉시 재고에 반영
     - 점포시스템등은 본사와 별개로 운영가능
+
+#### 판매취소에 따른 보상처리
+![3rdReview](https://user-images.githubusercontent.com/76420081/120095305-33804e80-c160-11eb-9f47-63e337db2c01.png)
+- 처리내역
+    - 판매취소되면, 보상처리로 취소된 판매분만큼 재고를 증가시킨다
+    - 판매취소되면, 보상처리로 취소된 판매분만큼 매출집계에서 제외한다
 
 ## 헥사고날 아키텍처 다이어그램 도출
 ![hexagonal1](https://user-images.githubusercontent.com/81946287/118779966-88050d80-b8c6-11eb-88dc-74be433e6f17.png)
