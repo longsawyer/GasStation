@@ -792,71 +792,25 @@ server:
 - EKS에 배포 시, MSA는 Service type을 ClusterIP(default)로 설정하여, 클러스터 내부에서만 호출 가능하도록 한다.
 - API Gateway는 Service type을 LoadBalancer로 설정하여 외부 호출에 대한 라우팅을 처리한다.
 
-
 # 운영
 ## CI/CD 설정
-### 빌드/배포(AWS)
-각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 ECR저장소에 올린다.   
-EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
+### 빌드/배포
+각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 DockerHub에 올린다.   
+Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
   - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
-  - 운영 플랫폼 : AWS의 EKS(Elastic Kubernetes Service)   
-  - Docker Image 저장소 : AWS의 ECR(Elastic Container Registry)
+  - 운영 플랫폼 : Minikube 클러스터
+  - Docker Image 저장소 : 로컬 도커이미지
+    - DockerHub에 올려서 클러스터에 올리는것은 별도로 확인함
+    - DockerHub 업로드 속도가 느려서 로컬이미지 이용으로 변경
 
-##### 배포 명령어(AWS)
-```
-cd d:\projects\gasstation\Order\
-mvn package -B
-docker build -t laios/order:1 .
-docker push laios/order:1
-cd d:\projects\gasstation\Order\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
-
-cd d:\projects\gasstation\Station\
-mvn package -B
-docker build -t laios/station:1 .
-docker push laios/station:1
-cd d:\projects\gasstation\station\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
-
-cd d:\projects\gasstation\POS\
-mvn package -B
-docker build -t laios/pos:1 .
-docker push laios/pos:1
-cd d:\projects\gasstation\pos\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
-
-cd d:\projects\gasstation\Logistics\
-mvn package -B
-docker build -t laios/logistics:1 .
-docker push laios/logistics:1
-cd d:\projects\gasstation\logistics\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
-
-cd d:\projects\gasstation\Gateway\
-mvn package -B
-docker build -t laios/Gateway:1.
-docker push laios/Gateway:1
-kubectl create deploy gateway --image=laios/gateway:1
-kubectl expose deployment gateway --type=LoadBalancer --port=8080
-```
-
-##### 배포 결과(AWS)
-![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
-
-### 빌드/배포(minikube)
+### 빌드/배포
 각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 로컬저장소에 올린다.   
 Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
   - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
   - 운영 플랫폼 : minikube
   - Docker Image 저장소 : 로컬저장소
-    - DockerHub에 올려서 클러스터에 올리는것은 별도로 확인함
-    - DockerHub 업로드 속도가 느려서 로컬이미지 이용으로 변경
 
-##### 배포 명령어(minikube)
+##### 배포 명령어
 - push를 제외한다, 도커의 로컬빌드 이미지 그대로 이용하는 형태
 - Windows10에선 파워쉘에 돌려야 동작한다
 ```
@@ -927,7 +881,7 @@ spec:
           - containerPort: 8080
 ```
 
-#### deployment.yml 설정(minikube)
+#### deployment.yml 설정
 ```
 ...
 spec:
@@ -940,7 +894,7 @@ spec:
 		  ...
 ```
 
-##### 배포 결과(minikube)
+##### 배포 결과
 ![image](https://user-images.githubusercontent.com/76420081/120104314-d2bc3a80-c18e-11eb-9b46-915ad71e8da0.png)
 ![image](https://user-images.githubusercontent.com/76420081/120104797-35aed100-c191-11eb-9c87-e410a1e1270c.png)
 ![image](https://user-images.githubusercontent.com/76420081/120106415-d0aaa980-c197-11eb-84a8-e2b5888d8868.png)
@@ -954,9 +908,10 @@ spec:
 http -f POST http://127.0.0.1:8080/orders/placeOrder productId=CD1001 qty=20000 destAddr="SK Imme Station" 
 http -f POST http://localhost:8080/stocks/confirmStock orderId=1
 ```
+![image](https://user-images.githubusercontent.com/76420081/120203861-2009dc00-c263-11eb-807d-a60a9770a224.png)
 
 
-## 동기식호출 /서킷브레이킹 /장애격리(minikube)
+## 동기식호출 /서킷브레이킹 /장애격리
 - 서킷 브레이킹 프레임워크의 선택
   - Spring FeignClient + Hystrix 옵션을 사용할 경우, 도메인 로직과 부가기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다
@@ -1039,7 +994,6 @@ minikube dashboard
 ```
 ![image](https://user-images.githubusercontent.com/76420081/120110419-5171a180-c1a8-11eb-9707-fb7ca3a99f2d.png)
 ![image](https://user-images.githubusercontent.com/76420081/120110448-79610500-c1a8-11eb-91cf-69398dbe2d57.png)
-
 
 
 ## 동기식호출 /서킷브레이킹 /장애격리
