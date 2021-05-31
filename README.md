@@ -803,6 +803,11 @@ Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, servic
     - DockerHub에 올려서 클러스터에 올리는것은 별도로 확인함
     - DockerHub 업로드 속도가 느려서 로컬이미지 이용으로 변경
 
+### AWS환경(아래 작성예정)
+```
+https://github.com/longsawyer/GasStation/blob/main/aws.md
+```
+
 ### 빌드/배포
 각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 로컬저장소에 올린다.   
 Minikube 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
@@ -899,8 +904,7 @@ spec:
 ![image](https://user-images.githubusercontent.com/76420081/120104797-35aed100-c191-11eb-9c87-e410a1e1270c.png)
 ![image](https://user-images.githubusercontent.com/76420081/120106415-d0aaa980-c197-11eb-84a8-e2b5888d8868.png)
 - minikube는 EXTERNAL-IP가 펜딩됨 
-- 테스트하려면, 둘중 하나
-  - minikube service gateway
+- 테스트하려면, 아래 명령실행
   - minikube tunnel
 
 ##### G/W 테스트
@@ -996,92 +1000,10 @@ minikube dashboard
 ![image](https://user-images.githubusercontent.com/76420081/120110448-79610500-c1a8-11eb-91cf-69398dbe2d57.png)
 
 
-## 동기식호출 /서킷브레이킹 /장애격리
-- 서킷 브레이킹 프레임워크의 선택
-  - Spring FeignClient + Hystrix 옵션을 사용하여 구현할 경우, 도메인 로직과 부가 기능 로직이 서비스에 같이 구현된다.
-  - istio를 사용해서 서킷 브레이킹 적용이 가능하다.
-- istio 설치
-
-![image](https://user-images.githubusercontent.com/76420081/119083009-2665b000-ba3a-11eb-8a43-aeb9b7e7db98.png)
-![image](https://user-images.githubusercontent.com/76420081/119083153-6331a700-ba3a-11eb-9543-475bb812c176.png)
-![image](https://user-images.githubusercontent.com/76420081/119083538-1b5f4f80-ba3b-11eb-952d-89e7d7adec23.png)
-http://acdf28d4a2a744330ad8f7db4e05aeac-1896393867.ap-southeast-2.elb.amazonaws.com:20001/
-![image](https://user-images.githubusercontent.com/76420081/119086647-c292b580-ba40-11eb-9450-7b47e4128157.png)
-
-```
- root@labs--2007877942:/home/project# curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.7.1 TARGET_ARCH=x86_64 sh -
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   102  100   102    0     0    153      0 --:--:-- --:--:-- --:--:--   152
-100  4573  100  4573    0     0   4880      0 --:--:-- --:--:-- --:--:--  4880
-
-Downloading istio-1.7.1 from https://github.com/istio/istio/releases/download/1.7.1/istio-1.7.1-linux-amd64.tar.gz ...
-
-Istio 1.7.1 Download Complete!
-
-Istio has been successfully downloaded into the istio-1.7.1 folder on your system.
-
-Next Steps:
-See https://istio.io/latest/docs/setup/install/ to add Istio to your Kubernetes cluster.
-
-To configure the istioctl client tool for your workstation,
-add the /home/project/istio-1.7.1/bin directory to your environment path variable with:
-         export PATH="$PATH:/home/project/istio-1.7.1/bin"
-
-Begin the Istio pre-installation check by running:
-         istioctl x precheck 
-
-Need more information? Visit https://istio.io/latest/docs/setup/install/ 
-root@labs--2007877942:/home/project# ㅣㅣ
-bash: ㅣㅣ: command not found
-root@labs--2007877942:/home/project# ll
-total 24
-drwxr-xr-x 4 root root  6144 May 21 04:37 ./
-drwxrwxr-x 1 root root    19 May  3 04:35 ../
--rwx------ 1 root root 11248 May 21 03:06 get_helm.sh*
-drwxr-x--- 6 root root  6144 Sep  9  2020 istio-1.7.1/
-drwxr-xr-x 4 root root  6144 May 21 02:37 team/
-root@labs--2007877942:/home/project# cd istio-1.7.1/
-root@labs--2007877942:/home/project/istio-1.7.1# export PATH=$PWD/bin:$PATH
-root@labs--2007877942:/home/project/istio-1.7.1# istioctl install --set profile=demo --set hub=gcr.io/istio-release
-
-Istio core installed                                                                            
-Istiod installed                                                                                
-Ingress gateways installed                                                                                                                                                   
-Egress gateways installed                                                                                                                                                       
-Installation complete                                                                                                                 
-```
-
-- istio 에서 서킷브레이커 설정(DestinationRule)
-```
-cat <<EOF | kubectl apply -f -
-apiVersion: networking.istio.io/v1alpha3
-kind: DestinationRule
-metadata:
-  name: order
-spec:
-  host: order
-  trafficPolicy:
-    connectionPool:
-      tcp:
-        maxConnections: 1           # 목적지로 가는 HTTP, TCP connection 최대 값. (Default 1024)
-      http:
-        http1MaxPendingRequests: 1  # 연결을 기다리는 request 수를 1개로 제한 (Default 
-        maxRequestsPerConnection: 1 # keep alive 기능 disable
-        maxRetries: 3               # 기다리는 동안 최대 재시도 수(Default 1024)
-    outlierDetection:
-      consecutiveErrors: 5          # 5xx 에러가 5번 발생하면
-      interval: 1s                  # 1초마다 스캔 하여
-      baseEjectionTime: 30s         # 30 초 동안 circuit breaking 처리   
-      maxEjectionPercent: 100       # 100% 로 차단
-EOF
-
-```
-
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작을 확인한다.
-- 동시사용자 100명
-- 60초 동안 실시
-- 결과 화면
+  - 동시사용자 100명
+  - 60초 동안 실시
+  - 결과 화면
 ![image](https://user-images.githubusercontent.com/76420081/119089217-c32d4b00-ba44-11eb-8038-9c86b9c92897.png)
 ![kiali](https://user-images.githubusercontent.com/81946287/119092566-8b74d200-ba49-11eb-8ce1-e38ebfcacd13.png)
 
