@@ -1021,21 +1021,36 @@ pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상�
 이때, 재기동 제어값인 /tmp/healthy파일을 강제로 지워 liveness가 pod를 비정상 상태라고 판단하도록 하였다.    
 5번 재시도 후에도 파드가 뜨지 않았을 경우 CrashLoopBackOff 상태가 됨을 확인하였다.   
 
+![image](https://user-images.githubusercontent.com/76420081/120343014-4c8d2900-c333-11eb-8896-cd17a4c18ff1.png)
 
-##### order에 Liveness 적용한 내용
-```yaml
+/Order/kubernetes/deployment.yml
+```
 apiVersion: apps/v1
 kind: Deployment
-...
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
     spec:
       containers:
         - name: order
           image: laios/order:3
+          imagePullPolicy: Never
           args:
           - /bin/sh
           - -c
           - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
-...
+          ports:
+            - containerPort: 8080
           livenessProbe:
             httpGet:
               path: '/actuator/health'
@@ -1044,6 +1059,17 @@ kind: Deployment
             timeoutSeconds: 2
             periodSeconds: 5
             failureThreshold: 5
+          env:
+          - name: station_nm
+            valueFrom:
+              secretKeyRef:
+                name: order
+                key: stationName
+          - name: station_cd
+            valueFrom:
+              configMapKeyRef:
+                name: order
+                key: stationCode
 ```
 
 
