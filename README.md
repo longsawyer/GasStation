@@ -999,13 +999,16 @@ minikube dashboard
 ![image](https://user-images.githubusercontent.com/76420081/120110419-5171a180-c1a8-11eb-9707-fb7ca3a99f2d.png)
 ![image](https://user-images.githubusercontent.com/76420081/120110448-79610500-c1a8-11eb-91cf-69398dbe2d57.png)
 
-
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작을 확인한다.
   - 동시사용자 100명
   - 60초 동안 실시
   - 결과 화면
-![image](https://user-images.githubusercontent.com/76420081/119089217-c32d4b00-ba44-11eb-8038-9c86b9c92897.png)
-![kiali](https://user-images.githubusercontent.com/81946287/119092566-8b74d200-ba49-11eb-8ce1-e38ebfcacd13.png)
+
+```
+siege -c100 -t60S  -v "http://127.0.0.1:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SKImme"
+```
+![image](https://user-images.githubusercontent.com/76420081/120340842-52820a80-c331-11eb-85e9-bdcd4ed1edce.png)
+
 
 ### Liveness
 pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상태인 경우 pod를 재기동하도록 한다.   
@@ -1018,6 +1021,7 @@ pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상�
 이때, 재기동 제어값인 /tmp/healthy파일을 강제로 지워 liveness가 pod를 비정상 상태라고 판단하도록 하였다.    
 5번 재시도 후에도 파드가 뜨지 않았을 경우 CrashLoopBackOff 상태가 됨을 확인하였다.   
 
+
 ##### order에 Liveness 적용한 내용
 ```yaml
 apiVersion: apps/v1
@@ -1026,7 +1030,7 @@ kind: Deployment
     spec:
       containers:
         - name: order
-          image: 740569282574.dkr.ecr.ap-southeast-2.amazonaws.com/puri-order:v3
+          image: laios/order:3
           args:
           - /bin/sh
           - -c
@@ -1058,7 +1062,7 @@ kubectl get hpa order -w
 
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
-siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
+siege -c50 -t180S  -v "http://127.0.0.1:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SKImme"
 
 ```
 
@@ -1070,9 +1074,9 @@ siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-sout
 
 ## 무정지 재배포
 * 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 서킷브레이커 설정을 제거함
-- seige 로 배포작업 직전에 워크로드를 모니터링 한다.
+- siege 로 배포작업 직전에 워크로드를 모니터링 한다.
 ```
-siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
+siege -c50 -t180S  -v "http://127.0.0.1:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SKImme"
 ```
 
 - readinessProbe, livenessProbe 설정되지 않은 상태로 buildspec.yml을 수정한다.
@@ -1105,8 +1109,8 @@ data:
 - order에서 사용할 상점명(주유소명)를 넣는다
 
 ```
-echo -n 'SK이매주유소' | base64
-LW4gJ1NLwMy4xcHWwK+80icgDQo=
+echo -n 'SK Imme' | base64
+LW4gJ1NLIEltbWUnIA0K
 ```
 
 ```
@@ -1117,7 +1121,7 @@ metadata:
   name: order
 type: Opaque
 data:
-  stationName: LW4gJ1NLwMy4xcHWwK+80icgDQo=
+  stationName: LW4gJ1NLIEltbWUnIA0K
 ```
 
 ## ConfigMap/Secret 적용내용
@@ -1166,14 +1170,22 @@ spec:
  * @return
  */
 @RequestMapping(value = "/orders/station", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-public boolean station() {
+public String station() {
 	logger.info("### 점포=" + System.getenv().get("station_nm") + ", " + System.getenv().get("station_cd"));
-	return true;
+	return System.getenv().get("station_nm") + ", " + System.getenv().get("station_cd");
 }
 ```
 
-![image](https://user-images.githubusercontent.com/76420081/120335516-7db62b00-c32c-11eb-9441-4b74b4b4c16d.png)
+- 설정적용
+```
+cd D:\projects\gasstation\kube
+kubectl apply -f .\secret.yml
+kubectl apply -f .\configmap.yml
 
+http -f POST http://127.0.0.1:8080/orders/station
+```
+![image](https://user-images.githubusercontent.com/76420081/120335516-7db62b00-c32c-11eb-9441-4b74b4b4c16d.png)<br>
+![image](https://user-images.githubusercontent.com/76420081/120338870-9542e300-c32f-11eb-8ca9-6b290be4f719.png)
 
 
 ## 운영 모니터링
