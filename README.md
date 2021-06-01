@@ -1248,9 +1248,8 @@ CloudWatch Logs 수집, 아카이브 스토리지 및 데이터 스캔 요금이
 - 쿠버네티스 모니터링 솔루션 중에 가장 인기 많은 것은 Heapster와 Prometheus 이다.
 - Heapster는 쿠버네티스에서 기본적으로 제공이 되며, 클러스터 내의 모니터링과 이벤트 데이터를 수집한다.
 - Prometheus는 CNCF에 의해 제공이 되며, 쿠버네티스의 각 다른 객체와 구성으로부터 리소스 사용을 수집할 수 있다.
-- 쿠버네티스에서 로그를 수집하는 가장 흔한 방법은 fluentd를 사용하는 Elasticsearch 이며, fluentd는 node에서 에이전트로 작동하며 커스텀 설정이 가능하다.
+- 쿠버네티스에서 fluentd를 사용하는 Elastic search를 사용하여 주로 로그수집하며, fluentd는 node에서 에이전트로 작동하며 커스텀 설정이 가능하다.
 - 그 외 오픈소스를 활용하여 Worker Node 모니터링이 가능하다. 아래는 istio, mixer, grafana, kiali를 사용한 예이다.
-
 ```
 아래 내용 출처: https://bcho.tistory.com/1296?category=731548
 ```
