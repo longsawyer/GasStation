@@ -1089,7 +1089,6 @@ kubectl get hpa order -w
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
 siege -c50 -t180S  -v "http://127.0.0.1:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SKImme"
-
 ```
 
 - 오토스케일 발생하지 않음(siege 실행 결과 오류 없이 수행됨 : Availability 100%)
