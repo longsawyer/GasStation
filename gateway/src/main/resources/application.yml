@@ -1,0 +1,75 @@
+server:
+  port: 8088
+
+---
+
+spring:
+  profiles: default
+  cloud:
+    gateway:
+      routes:
+        - id: pos
+          uri: http://localhost:8081
+          predicates:
+            - Path=/sales/**,/productMenus/**,cancelSales/**
+        - id: station
+          uri: http://localhost:8082
+          predicates:
+            - Path=/stocks/**,/stockFlows/**,/accounts/**,/productMasters/**,/stockSummaries/**,/salesSummaries/**
+        - id: order
+          uri: http://localhost:8083
+          predicates:
+            - Path=/orders/**,/products/**,/orderStatuses/**
+        - id: logistics
+          uri: http://localhost:8084
+          predicates:
+            - Path=/shipments/** 
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+server:
+  port: 8080
+
+---
+
+spring:
+  profiles: docker
+  cloud:
+    gateway:
+      routes:
+        - id: pos
+          uri: http://pos:8080
+          predicates:
+            - Path=/sales/**,/productMenus/**,cancelSales/**
+        - id: station
+          uri: http://station:8080
+          predicates:
+            - Path=/stocks/**,/stockFlows/**,/accounts/**,/productMasters/**,/stockSummaries/**,/salesSummaries/**
+        - id: order
+          uri: http://order:8080
+          predicates:
+            - Path=/orders/**,/products/**,/orderStatuses/**
+        - id: logistics
+          uri: http://logistics:8080
+          predicates:
+            - Path=/shipments/** 
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "*"
+            allowedMethods:
+              - "*"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+
+server:
+  port: 8080

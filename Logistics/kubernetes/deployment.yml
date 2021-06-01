@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logistics
+  labels:
+    app: logistics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: logistics
+  template:
+    metadata:
+      labels:
+        app: logistics
+    spec:
+      containers:
+        - name: logistics
+          image: laios/logistics:1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+         

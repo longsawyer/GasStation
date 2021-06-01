@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: laios/order:3
+          imagePullPolicy: Never
+          args:
+          - /bin/sh
+          - -c
+          - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: '/actuator/health'
+              port: 8080
+            initialDelaySeconds: 3
+            timeoutSeconds: 2
+            periodSeconds: 5
+            failureThreshold: 5
+          env:
+          - name: station_nm
+            valueFrom:
+              secretKeyRef:
+                name: order
+                key: stationName
+          - name: station_cd
+            valueFrom:
+              configMapKeyRef:
+                name: order
+                key: stationCode

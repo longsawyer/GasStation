@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pos
+  labels:
+    app: pos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pos
+  template:
+    metadata:
+      labels:
+        app: pos
+    spec:
+      containers:
+        - name: pos
+          image: laios/pos:1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+       

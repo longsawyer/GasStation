@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: order
+spec:
+  host: order
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1           # 목적지로 가는 HTTP, TCP connection 최대 값. (Default 1024)
+      http:
+        http1MaxPendingRequests: 1  # 연결을 기다리는 request 수를 1개로 제한 (Default 
+        maxRequestsPerConnection: 1 # keep alive 기능 disable
+        maxRetries: 3               # 기다리는 동안 최대 재시도 수(Default 1024)
+    outlierDetection:
+      consecutiveErrors: 5          # 5xx 에러가 5번 발생하면
+      interval: 1s                  # 1초마다 스캔 하여
+      baseEjectionTime: 30s         # 30 초 동안 circuit breaking 처리   
+      maxEjectionPercent: 100       # 100% 로 차단
