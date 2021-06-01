@@ -1084,38 +1084,96 @@ siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-sout
 - siege 수행 결과 : 
 
 
-## ConfigMap 적용
-- 설정의 외부 주입을 통한 유연성을 제공하기 위해 ConfigMap을 적용한다.
-- orderstatus 에서 사용하는 mySQL(AWS RDS 활용) 접속 정보를 ConfigMap을 통해 주입 받는다.
+## ConfigMap적용
+- 설정을 외부주입하여 변경할 수 있다
+- order에서 사용할 상점코드(주유소코드)를 넣는다
 
 ```
-cat <<EOF | kubectl apply -f -
+## configmap.yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: order
 data:
-  urlstatus: "jdbc:mysql://order.cgzkudckye4b.ap-southeast-2:3306/orderstatus?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8"
-EOF
+  stationCode: "ST0001"
 ```
 
-## Secret 적용
+## Secret적용
 - username, password와 같은 민감한 정보는 ConfigMap이 아닌 Secret을 적용한다.
 - etcd에 암호화 되어 저장되어, ConfigMap 보다 안전하다.
 - value는 base64 인코딩 된 값으로 지정한다. (echo root | base64)
+- order에서 사용할 상점명(주유소명)를 넣는다
 
 ```
-cat <<EOF | kubectl apply -f -
+echo -n 'SK이매주유소' | base64
+LW4gJ1NLwMy4xcHWwK+80icgDQo=
+```
+
+```
+## secret.yml
 apiVersion: v1
 kind: Secret
 metadata:
   name: order
 type: Opaque
 data:
-  username: xxxxx <- 보안 상, 임의의 값으로 표시함 
-  password: xxxxx <- 보안 상, 임의의 값으로 표시함
-EOF
+  stationName: LW4gJ1NLwMy4xcHWwK+80icgDQo=
 ```
+
+## ConfigMap/Secret 적용내용
+
+- deployment.yml
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: laios/order:3
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+          - name: station_nm
+            valueFrom:
+              secretKeyRef:
+                name: order
+                key: stationName
+          - name: station_cd
+            valueFrom:
+              configMapKeyRef:
+                name: order
+                key: stationCode
+```
+
+- 테스트코드
+```
+/**
+ * 점포명 출력
+ * @return
+ */
+@RequestMapping(value = "/orders/station", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+public boolean station() {
+	logger.info("### 점포=" + System.getenv().get("station_nm") + ", " + System.getenv().get("station_cd"));
+	return true;
+}
+```
+
+![image](https://user-images.githubusercontent.com/76420081/120335516-7db62b00-c32c-11eb-9441-4b74b4b4c16d.png)
+
 
 
 ## 운영 모니터링
