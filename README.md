@@ -1261,10 +1261,10 @@ CloudWatch Logs 수집, 아카이브 스토리지 및 데이터 스캔 요금이
 
 ![image](https://user-images.githubusercontent.com/64656963/86347967-ff738380-bc99-11ea-9b5e-6fb94dd4107a.png)
 
-- 서비스 A가 서비스 B를 호출할때 호출 트래픽은 각각의 envoy 프록시를 통하게 되고, 호출을 할때, 응답 시간과 서비스의 처리량이 Mixer로 전달된다. 
+- 서비스 A가 서비스 B를 호출할때 호출 트래픽은 각각의 envoy 프록시를 통하며, 응답 시간과 서비스의 처리량이 Mixer로 전달된다. 
 - 전달된 각종 지표는 Mixer에 연결된 Logging Backend에 저장된다.
-- Mixer는 위의 그림과 같이 플러그인이 가능한 아답터 구조로, 운영하는 인프라에 맞춰서 로깅 및 모니터링 시스템을 손쉽게 변환이 가능하다.  
-- 쿠버네티스에서 많이 사용되는 Heapster나 Prometheus에서 부터 구글 클라우드의 StackDriver 그리고, 전문 모니터링 서비스인 Datadog 등으로 저장이 가능하다.
+- Mixer는 플러그인이 가능한 아답터로, 운영하는 인프라에 맞게 로깅 및 모니터링 시스템을 손쉽게 변환이 가능하다.  
+- 쿠버네티스에서 많이 사용되는 Heapster나 Prometheus에서부터 구글 클라우드의 StackDriver 그리고, 전문 모니터링 서비스인 Datadog 등으로 저장이 가능하다. <br>
 ![image](https://user-images.githubusercontent.com/64656963/86348023-14501700-bc9a-11ea-9759-a40679a6a61b.png)
 
 - 이렇게 저장된 지표들은 도구를 이용해서 시각화 될 수 있는데, 아래는 Grafana를 사용하여 지표를 시각하였다
