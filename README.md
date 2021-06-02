@@ -920,6 +920,9 @@ http -f POST http://localhost:8080/stocks/confirmStock orderId=1
   - Spring FeignClient + Hystrix 옵션을 사용할 경우, 도메인 로직과 부가기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다
 
+##### 각 도구설치법
+https://github.com/longsawyer/gasstation/issues/8
+
 ##### istio 설치
 * 윈도우용 설치 
     * https://github.com/istio/istio/releases 
