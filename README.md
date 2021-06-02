@@ -38,8 +38,8 @@
       - 배차
       - 본사ERP
       - 비고
-        - 구 시스템들 역시 MSMQ로 시스템이 격리되어 있으며, 어찌보면 옛날기술도 구현된 MSA로 볼 수도 있다
-        - 타 시스템들이 장애생겨도, 각각 독립운영가능했었다 (실 현업요구사항이였음)
+        - 구 시스템들도 MSMQ로 시스템 격리되어 있으며, 옛날기술도 구현된 MSA로 볼 수도 있다
+        - 타 시스템들이 장애생겨도, 각각 독립운영가능하다
 
 ![image](https://user-images.githubusercontent.com/76420081/120093071-af739a00-c152-11eb-89cf-e3232023e7bd.png)
 
@@ -149,13 +149,11 @@
 
 # 분석/설계
 
-
 ## AS-IS 조직 (Horizontally-Aligned)
 ![as_is](https://user-images.githubusercontent.com/76420081/120093786-886b9700-c157-11eb-9775-fd865b4cb781.png)
 
 ## TO-BE 조직 (Vertically-Aligned)
 ![to_be](https://user-images.githubusercontent.com/76420081/120093800-9ae5d080-c157-11eb-8058-99b87b60bddd.png)
-
 
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과:  
@@ -232,25 +230,22 @@
 
 ![hexagonal2](https://user-images.githubusercontent.com/76420081/120096055-4a28a480-c164-11eb-86d6-4fc52c86db3e.png)
 
-
-
 # 구현:
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 8083 이다)
 
+  - Local
 ```
-- Local
-	cd Order
-	mvn spring-boot:run
+cd Order
+mvn spring-boot:run
 
-	cd Station
-	mvn spring-boot:run
+cd Station
+mvn spring-boot:run
 
-	cd POS
-	mvn spring-boot:run
-	
-	cd Logistics
-	mvn spring-boot:run
+cd POS
+mvn spring-boot:run
 
+cd Logistics
+mvn spring-boot:run
 
 - EKS : CI/CD 통해 빌드/배포 ("운영 > CI-CD 설정" 부분 참조)
 ```
@@ -268,7 +263,6 @@ import gasstation.event.Ordered;
 
 /**
  * 주문
- * @author Administrator
  */
 @Entity
 @Table(name="T_ORDER")
@@ -289,7 +283,6 @@ public class Order {
         BeanUtils.copyProperties(this, ordered);
         ordered.publishAfterCommit();
     }
-   
     ...
 }
 ```
@@ -452,8 +445,6 @@ public class Product {
 ```
 ![image](https://user-images.githubusercontent.com/76420081/120100025-81ee1700-c179-11eb-83b4-b5b674793f44.png)
 
-
-
 ## 동기식 호출과 Fallback 처리
 
 - POS에서 매출처리시, 즉시 점포시스템(BOS)에서 즉시 재고감소처리를 한다.
@@ -537,7 +528,6 @@ package gasstation.policy;
 
 /**
  * 판매뷰 핸들러
- * @author Administrator
  *
  */
 @Service
