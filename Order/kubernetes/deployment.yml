@@ -20,13 +20,14 @@ spec:
           args:
           - /bin/sh
           - -c
-          - touch /tmp/healthy; sleep 600; rm -rf /tmp/healthy; sleep 600;
+          - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
           ports:
             - containerPort: 8080
           livenessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
+            exec:
+              command:
+              - cat
+              - /tmp/healthy
             initialDelaySeconds: 3
             timeoutSeconds: 2
             periodSeconds: 5
