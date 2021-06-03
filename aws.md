@@ -210,8 +210,25 @@ kubectl get pods
 
 ### 오토스케일 아웃
 - 주문 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 1프로를 넘어서면 replica 를 10개까지 늘려준다.
+  - 쿠버 
 ```
 kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=1
+```
+
+  - deployment.yml
+```
+apiVersion: apps/v1
+kind: Deployment
+...
+    spec:
+      containers:
+        - name: order
+          resources:
+            limits: 
+              cpu: 500m
+            requests:
+              cpu: 200m
+          image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-order:v1
 ```
 
 - 오토스케일이 어떻게 되고 있는지 모니터링을 걸어준다.
@@ -222,13 +239,13 @@ kubectl get hpa order -w
 
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
-siege -c50 -t180S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST  productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
+siege -r 2000 -c 200 -v -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST  productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
 ```
 
 - 오토스케일 발생하지 않음(siege 실행 결과 오류 없이 수행됨 : Availability 100%)
 - 서비스에 복잡한 비즈니스 로직이 포함된 것이 아니어서, CPU 부하를 주지 못한 것으로 추정된다.
 
-![image](https://user-images.githubusercontent.com/76420081/120585661-1d7ad280-c46d-11eb-845c-6607ab0a5bad.png)
+![image](https://user-images.githubusercontent.com/76420081/120590433-7babb380-c475-11eb-9cf7-2def459901b4.png)
 
 ## 무정지 재배포
 * 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 서킷브레이커 설정을 제거함
