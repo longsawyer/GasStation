@@ -783,5 +783,5 @@ server:
 - API Gateway는 Service type을 LoadBalancer로 설정하여 외부 호출에 대한 라우팅을 처리한다.
 
 # 운영
-https://github.com/longsawyer/gasstation/blob/main/aws.md
-https://github.com/longsawyer/gasstation/blob/main/minikube.md
+- AWS: https://github.com/longsawyer/gasstation/blob/main/aws.md
+- minikube: https://github.com/longsawyer/gasstation/blob/main/minikube.md
