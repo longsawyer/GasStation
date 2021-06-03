@@ -3,111 +3,102 @@
 ### 빌드/배포(AWS)
 각 프로젝트 jar를 Dockerfile을 통해 Docker Image 만들어 ECR저장소에 올린다.   
 EKS 클러스터에 접속한 뒤, 각 서비스의 deployment.yaml, service.yaml을 kuectl명령어로 서비스를 배포한다.   
-  - 코드 형상관리 : https://github.com/longsawyer/GasStation 하위 repository에 각각 구성   
+  - 코드 형상관리 : https://github.com/longsawyer/gasstation 하위 repository에 각각 구성   
   - 운영 플랫폼 : AWS의 EKS(Elastic Kubernetes Service)   
   - Docker Image 저장소 : AWS의 ECR(Elastic Container Registry)
   
 ##### 배포 명령어(AWS)
 ```
-cd d:\projects\gasstation\Order\
-mvn package -B
-docker build -t laios/order:1 .
-docker push laios/order:1
-cd d:\projects\gasstation\Order\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
+cd /home/project/gasstation;
+git pull;
+kubectl delete deploy,svc,pod --all
+	
+cd /home/project/gasstation/Order;mvn package -B;
+cd /home/project/gasstation/Order;docker build -t 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-order:v1 .;
+cd /home/project/gasstation/Order;docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-order:v1;
+cd /home/project/gasstation/Order/kubernetes/;
+kubectl apply -f deployment.yml;
+kubectl apply -f service.yaml;
 
-cd d:\projects\gasstation\Station\
-mvn package -B
-docker build -t laios/station:1 .
-docker push laios/station:1
-cd d:\projects\gasstation\station\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
+cd /home/project/gasstation/Logistics;mvn package -B;
+cd /home/project/gasstation/Logistics;docker build -t 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-logistics:v1 .;
+cd /home/project/gasstation/Logistics;docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-logistics:v1;
+cd /home/project/gasstation/Logistics/kubernetes/;
+kubectl apply -f deployment.yml;
+kubectl apply -f service.yaml;
 
-cd d:\projects\gasstation\POS\
-mvn package -B
-docker build -t laios/pos:1 .
-docker push laios/pos:1
-cd d:\projects\gasstation\pos\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
+cd /home/project/gasstation/POS;mvn package -B;
+cd /home/project/gasstation/POS;docker build -t 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-pos:v1 .;
+cd /home/project/gasstation/POS;docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-pos:v1;
+cd /home/project/gasstation/POS/kubernetes/;
+kubectl apply -f deployment.yml;
+kubectl apply -f service.yaml;
 
-cd d:\projects\gasstation\Logistics\
-mvn package -B
-docker build -t laios/logistics:1 .
-docker push laios/logistics:1
-cd d:\projects\gasstation\logistics\kubernetes
-kubectl apply -f deployment.yml
-kubectl apply -f service.yaml
+cd /home/project/gasstation/Station;mvn package -B;
+cd /home/project/gasstation/Station;docker build -t 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-station:v1 .;
+cd /home/project/gasstation/Station;docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-station:v1;
+cd /home/project/gasstation/Station/kubernetes/;
+kubectl apply -f deployment.yml;
+kubectl apply -f service.yaml;
 
-cd d:\projects\gasstation\Gateway\
-mvn package -B
-docker build -t laios/Gateway:1.
-docker push laios/Gateway:1
-kubectl create deploy gateway --image=laios/gateway:1
+cd /home/project/gasstation/gateway;mvn package -B;
+cd /home/project/gasstation/gateway;docker build -t 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-gateway:v1 .;
+cd /home/project/gasstation/gateway;docker push 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-gateway:v1;
+kubectl create deploy gateway --image=879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-gateway:v1
 kubectl expose deployment gateway --type=LoadBalancer --port=8080
 ```
 
 ##### 배포 결과(AWS)
-![image](https://user-images.githubusercontent.com/76420081/119082405-fa95fa80-ba38-11eb-8ad5-c7cd5b4f736a.png)
+![image](https://user-images.githubusercontent.com/76420081/120580317-ef44c500-c463-11eb-9e8c-4cc108b576b7.png)
 
 
 ## 동기식호출 /서킷브레이킹 /장애격리
 - 서킷 브레이킹 프레임워크의 선택
   - Spring FeignClient + Hystrix 옵션을 사용하여 구현할 경우, 도메인 로직과 부가 기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다.
+
+
 - istio 설치
-
-![image](https://user-images.githubusercontent.com/76420081/119083009-2665b000-ba3a-11eb-8a43-aeb9b7e7db98.png)
-![image](https://user-images.githubusercontent.com/76420081/119083153-6331a700-ba3a-11eb-9543-475bb812c176.png)
-![image](https://user-images.githubusercontent.com/76420081/119083538-1b5f4f80-ba3b-11eb-952d-89e7d7adec23.png)
-http://acdf28d4a2a744330ad8f7db4e05aeac-1896393867.ap-southeast-2.elb.amazonaws.com:20001/
-![image](https://user-images.githubusercontent.com/76420081/119086647-c292b580-ba40-11eb-9450-7b47e4128157.png)
-
 ```
- root@labs--2007877942:/home/project# curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.7.1 TARGET_ARCH=x86_64 sh -
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   102  100   102    0     0    153      0 --:--:-- --:--:-- --:--:--   152
-100  4573  100  4573    0     0   4880      0 --:--:-- --:--:-- --:--:--  4880
+cd /home/project
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.7.1 TARGET_ARCH=x86_64 sh -
+cd istio-1.7.1
+export PATH=$PWD/bin:$PATH
+istioctl install --set profile=demo --set hub=gcr.io/istio-release
+kubectl label namespace default istio-injection=enabled 
+배포다시
 
-Downloading istio-1.7.1 from https://github.com/istio/istio/releases/download/1.7.1/istio-1.7.1-linux-amd64.tar.gz ...
-
-Istio 1.7.1 Download Complete!
-
-Istio has been successfully downloaded into the istio-1.7.1 folder on your system.
-
-Next Steps:
-See https://istio.io/latest/docs/setup/install/ to add Istio to your Kubernetes cluster.
-
-To configure the istioctl client tool for your workstation,
-add the /home/project/istio-1.7.1/bin directory to your environment path variable with:
-         export PATH="$PATH:/home/project/istio-1.7.1/bin"
-
-Begin the Istio pre-installation check by running:
-         istioctl x precheck 
-
-Need more information? Visit https://istio.io/latest/docs/setup/install/ 
-root@labs--2007877942:/home/project# ㅣㅣ
-bash: ㅣㅣ: command not found
-root@labs--2007877942:/home/project# ll
-total 24
-drwxr-xr-x 4 root root  6144 May 21 04:37 ./
-drwxrwxr-x 1 root root    19 May  3 04:35 ../
--rwx------ 1 root root 11248 May 21 03:06 get_helm.sh*
-drwxr-x--- 6 root root  6144 Sep  9  2020 istio-1.7.1/
-drwxr-xr-x 4 root root  6144 May 21 02:37 team/
-root@labs--2007877942:/home/project# cd istio-1.7.1/
-root@labs--2007877942:/home/project/istio-1.7.1# export PATH=$PWD/bin:$PATH
-root@labs--2007877942:/home/project/istio-1.7.1# istioctl install --set profile=demo --set hub=gcr.io/istio-release
-
-Istio core installed                                                                            
-Istiod installed                                                                                
-Ingress gateways installed                                                                                                                                                   
-Egress gateways installed                                                                                                                                                       
-Installation complete                                                                                                                 
+확인
+kubectl get all -n istio-system 
 ```
+![image](https://user-images.githubusercontent.com/76420081/120580372-0be0fd00-c464-11eb-8c78-f155f1f96b7b.png)
+
+
+- kiali 설치<br>
+```
+vi samples/addons/kiali.yaml
+	4라인의 apiVersion: 
+		apiextensions.k8s.io/v1beta1을 apiVersion: apiextensions.k8s.io/v1으로 수정
+
+kubectl apply -f samples/addons
+	kiali.yaml 오류발생시, 아래 명령어 실행
+		kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.7/samples/addons/kiali.yaml
+
+kubectl edit svc kiali -n istio-system
+	:%s/ClusterIP/LoadBalancer/g
+	:wq!
+EXTERNAL-IP 확인
+	kubectl get all -n istio-system 
+모니터링 시스템(kiali) 접속 
+	EXTERNAL-IP:20001 (admin/admin)
+```
+![image](https://user-images.githubusercontent.com/76420081/120581869-7f840980-c466-11eb-8b89-d45f6be6dbd0.png)<br>
+![image](https://user-images.githubusercontent.com/76420081/120581856-7a26bf00-c466-11eb-8f8c-b733ecd01ac1.png)
+![image](https://user-images.githubusercontent.com/76420081/120581988-b0643e80-c466-11eb-84aa-44427d992bd5.png)
+![image](https://user-images.githubusercontent.com/76420081/120581994-b22e0200-c466-11eb-840f-5e8a1ce70b3d.png)
+![image](https://user-images.githubusercontent.com/76420081/120582008-b5c18900-c466-11eb-96a4-b0e140c4edb0.png)
+![image](https://user-images.githubusercontent.com/76420081/120581769-55324c00-c466-11eb-9244-8088cfabeb70.png)
+
 
 - istio 에서 서킷브레이커 설정(DestinationRule)
 ```
@@ -136,11 +127,11 @@ EOF
 ```
 
 * 부하테스터 siege 툴을 통한 서킷 브레이커 동작을 확인한다.
-- 동시사용자 100명
-- 60초 동안 실시
-- 결과 화면
-![image](https://user-images.githubusercontent.com/76420081/119089217-c32d4b00-ba44-11eb-8038-9c86b9c92897.png)
-![kiali](https://user-images.githubusercontent.com/81946287/119092566-8b74d200-ba49-11eb-8ce1-e38ebfcacd13.png)
+  - 동시사용자 100명
+  - 60초 동안 실시
+  - 결과 화면
+![image](https://user-images.githubusercontent.com/76420081/120583151-a6433f80-c468-11eb-81f7-f9a022c23148.png)
+![image](https://user-images.githubusercontent.com/76420081/120583180-ae9b7a80-c468-11eb-97cc-5c6368d8bf29.png)
 
 ### Liveness
 pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상태인 경우 pod를 재기동하도록 한다.   
@@ -161,7 +152,7 @@ kind: Deployment
     spec:
       containers:
         - name: order
-          image: 740569282574.dkr.ecr.ap-southeast-2.amazonaws.com/puri-order:v3
+          image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-order:v1
           args:
           - /bin/sh
           - -c
