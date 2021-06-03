@@ -132,6 +132,9 @@ EOF
   - 결과 화면
 ![image](https://user-images.githubusercontent.com/76420081/120583151-a6433f80-c468-11eb-81f7-f9a022c23148.png)
 ![image](https://user-images.githubusercontent.com/76420081/120583180-ae9b7a80-c468-11eb-97cc-5c6368d8bf29.png)
+```
+siege -c100 -t60S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
+```
 
 ### Liveness
 pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상태인 경우 pod를 재기동하도록 한다.   
@@ -184,23 +187,20 @@ kubectl get hpa order -w
 
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
-siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
-
+siege -c50 -t180S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST  productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
 ```
 
 - 오토스케일 발생하지 않음(siege 실행 결과 오류 없이 수행됨 : Availability 100%)
 - 서비스에 복잡한 비즈니스 로직이 포함된 것이 아니어서, CPU 부하를 주지 못한 것으로 추정된다.
 
-![image](https://user-images.githubusercontent.com/76420081/119087445-1ce04600-ba42-11eb-92c8-2f0e2d772562.png)
-
+![image](https://user-images.githubusercontent.com/76420081/120585661-1d7ad280-c46d-11eb-845c-6607ab0a5bad.png)
 
 ## 무정지 재배포
 * 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 서킷브레이커 설정을 제거함
-- seige 로 배포작업 직전에 워크로드를 모니터링 한다.
+- siege 로 배포작업 직전에 워크로드를 모니터링 한다.
 ```
-siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-southeast-2.elb.amazonaws.com:8080/order/joinOrder POST productId=4&productName=PURI4&installationAddress=Dongtan&customerId=504'
+siege -c50 -t180S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST  productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
 ```
-
 - readinessProbe, livenessProbe 설정되지 않은 상태로 buildspec.yml을 수정한다.
 - Github에 buildspec.yml 수정 발생으로 CodeBuild 자동 빌드/배포 수행된다.
 - siege 수행 결과 : 
@@ -210,38 +210,105 @@ siege -c50 -t180S  -v 'http://a39e59e8f1e324d23b5546d96364dc45-974312121.ap-sout
 - siege 수행 결과 : 
 
 
-## ConfigMap 적용
-- 설정의 외부 주입을 통한 유연성을 제공하기 위해 ConfigMap을 적용한다.
-- orderstatus 에서 사용하는 mySQL(AWS RDS 활용) 접속 정보를 ConfigMap을 통해 주입 받는다.
+## ConfigMap적용
+- 설정을 외부주입하여 변경할 수 있다
+- order에서 사용할 상점코드(주유소코드)를 넣는다
 
 ```
-cat <<EOF | kubectl apply -f -
+## configmap.yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: order
 data:
-  urlstatus: "jdbc:mysql://order.cgzkudckye4b.ap-southeast-2:3306/orderstatus?serverTimezone=UTC&useUnicode=true&characterEncoding=utf8"
-EOF
+  stationCode: "ST0001"
 ```
 
-## Secret 적용
+## Secret적용
 - username, password와 같은 민감한 정보는 ConfigMap이 아닌 Secret을 적용한다.
 - etcd에 암호화 되어 저장되어, ConfigMap 보다 안전하다.
 - value는 base64 인코딩 된 값으로 지정한다. (echo root | base64)
+- order에서 사용할 상점명(주유소명)를 넣는다
 
 ```
-cat <<EOF | kubectl apply -f -
+echo -n 'SK Imme' | base64
+LW4gJ1NLIEltbWUnIA0K
+```
+
+```
+## secret.yml
 apiVersion: v1
 kind: Secret
 metadata:
   name: order
 type: Opaque
 data:
-  username: xxxxx <- 보안 상, 임의의 값으로 표시함 
-  password: xxxxx <- 보안 상, 임의의 값으로 표시함
-EOF
+  stationName: LW4gJ1NLIEltbWUnIA0K
 ```
+
+## ConfigMap/Secret 적용내용
+
+- deployment.yml
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      containers:
+        - name: order
+          image: laios/order:3
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+          - name: station_nm
+            valueFrom:
+              secretKeyRef:
+                name: order
+                key: stationName
+          - name: station_cd
+            valueFrom:
+              configMapKeyRef:
+                name: order
+                key: stationCode
+```
+
+- 테스트코드
+```
+/**
+ * 점포명 출력
+ * @return
+ */
+@RequestMapping(value = "/orders/station", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+public String station() {
+	logger.info("### 점포=" + System.getenv().get("station_nm") + ", " + System.getenv().get("station_cd"));
+	return System.getenv().get("station_nm") + ", " + System.getenv().get("station_cd");
+}
+```
+
+- 설정적용: minikube에서 테스트한 내역
+```
+cd D:\projects\gasstation\kube
+kubectl apply -f .\secret.yml
+kubectl apply -f .\configmap.yml
+
+http -f POST http://127.0.0.1:8080/orders/station
+```
+![image](https://user-images.githubusercontent.com/76420081/120335516-7db62b00-c32c-11eb-9441-4b74b4b4c16d.png)<br>
+![image](https://user-images.githubusercontent.com/76420081/120338870-9542e300-c32f-11eb-8ca9-6b290be4f719.png)
+
 
 
 ## 운영 모니터링
