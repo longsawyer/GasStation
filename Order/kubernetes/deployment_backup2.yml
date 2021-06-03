@@ -17,10 +17,8 @@ spec:
       containers:
         - name: order
           image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-order:v1
-          args:
-          - /bin/sh
-          - -c
-          - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
+          #image: laios/order:3
+          #imagePullPolicy: Never
           ports:
             - containerPort: 8080
           livenessProbe:
