@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: logistics
-          image: laios/logistics:1
+          image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-logistics:v1
+          #image: laios/logistics:1
           #imagePullPolicy: Never
           ports:
             - containerPort: 8080

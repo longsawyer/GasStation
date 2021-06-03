@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: pos
-          image: laios/pos:1
+          image: 879772956301.dkr.ecr.ap-northeast-2.amazonaws.com/user03-pos:v1
+          #image: laios/pos:1
           #imagePullPolicy: Never
           ports:
             - containerPort: 8080
