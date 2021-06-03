@@ -95,7 +95,7 @@ EXTERNAL-IP 확인
 ![image](https://user-images.githubusercontent.com/76420081/120581869-7f840980-c466-11eb-8b89-d45f6be6dbd0.png)<br>
 ![image](https://user-images.githubusercontent.com/76420081/120581856-7a26bf00-c466-11eb-8f8c-b733ecd01ac1.png)
 ![image](https://user-images.githubusercontent.com/76420081/120581988-b0643e80-c466-11eb-84aa-44427d992bd5.png)
-![image](https://user-images.githubusercontent.com/76420081/120581994-b22e0200-c466-11eb-840f-5e8a1ce70b3d.png)
+![image](https://user-images.githubusercontent.com/76420081/120586763-0fc64c80-c46f-11eb-9510-e145e2632da7.png)
 ![image](https://user-images.githubusercontent.com/76420081/120582008-b5c18900-c466-11eb-96a4-b0e140c4edb0.png)
 ![image](https://user-images.githubusercontent.com/76420081/120581769-55324c00-c466-11eb-9244-8088cfabeb70.png)
 
@@ -148,9 +148,16 @@ pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상�
 5번 재시도 후에도 파드가 뜨지 않았을 경우 CrashLoopBackOff 상태가 됨을 확인하였다.   
 
 ##### order에 Liveness 적용한 내용
-```yaml
+
+yaml
+```
 apiVersion: apps/v1
 kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
 ...
     spec:
       containers:
@@ -160,16 +167,33 @@ kind: Deployment
           - /bin/sh
           - -c
           - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
-...
+          ports:
+            - containerPort: 8080
           livenessProbe:
-            httpGet:
-              path: '/actuator/health'
-              port: 8080
+            exec:
+              command:
+              - cat
+              - /tmp/healthy
             initialDelaySeconds: 3
             timeoutSeconds: 2
             periodSeconds: 5
             failureThreshold: 5
+          env:
+        ...
+
 ```
+
+- 확인
+```
+kubectl get pods -w
+```
+![image](https://user-images.githubusercontent.com/76420081/120587508-726c1800-c470-11eb-8327-2d84f896c839.png)
+![image](https://user-images.githubusercontent.com/76420081/120587737-e3abcb00-c470-11eb-82ca-745ccd031651.png)
+
+```
+kubectl get pods
+```
+![image](https://user-images.githubusercontent.com/76420081/120587885-28376680-c471-11eb-976d-cfd865c817e5.png)
 
 
 
