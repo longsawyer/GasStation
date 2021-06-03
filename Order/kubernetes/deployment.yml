@@ -17,11 +17,7 @@ spec:
       containers:
         - name: order
           image: laios/order:3
-          imagePullPolicy: Never
-          args:
-          - /bin/sh
-          - -c
-          - touch /tmp/healthy; sleep 10; rm -rf /tmp/healthy; sleep 600;
+          #imagePullPolicy: Never
           ports:
             - containerPort: 8080
           livenessProbe:

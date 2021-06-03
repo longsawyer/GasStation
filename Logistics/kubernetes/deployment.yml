@@ -17,7 +17,7 @@ spec:
       containers:
         - name: logistics
           image: laios/logistics:1
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           ports:
             - containerPort: 8080
          

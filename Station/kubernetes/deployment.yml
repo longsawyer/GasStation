@@ -17,7 +17,7 @@ spec:
       containers:
         - name: station
           image: laios/station:1
-          imagePullPolicy: Never
+          #imagePullPolicy: Never
           ports:
             - containerPort: 8080
        
