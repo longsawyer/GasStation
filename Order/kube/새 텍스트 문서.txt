@@ -1,0 +1,39 @@
+minikube docker-env | Invoke-Expression
+
+kubectl delete deploy,svc,pod --all
+
+cd d:\projects\gasstation\Order\
+mvn package -B
+docker build -t laios/order:3 .
+cd d:\projects\gasstation\Order\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Station\
+mvn package -B
+docker build -t laios/station:1 .
+cd d:\projects\gasstation\station\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\POS\
+mvn package -B
+docker build -t laios/pos:1 .
+cd d:\projects\gasstation\pos\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Logistics\
+mvn package -B
+docker build -t laios/logistics:1 .
+cd d:\projects\gasstation\logistics\kubernetes
+kubectl apply -f deployment.yml
+kubectl apply -f service.yaml
+
+cd d:\projects\gasstation\Gateway\
+mvn package -B
+docker build -t laios/gateway:2 .
+cd d:\projects\gasstation\kube\
+kubectl apply -f gateway.yml
+kubectl expose deployment gateway --type=LoadBalancer --port=8080
+minikube tunnel -c
