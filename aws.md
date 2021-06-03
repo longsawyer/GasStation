@@ -94,7 +94,6 @@ EXTERNAL-IP 확인
 ```
 ![image](https://user-images.githubusercontent.com/76420081/120581869-7f840980-c466-11eb-8b89-d45f6be6dbd0.png)<br>
 ![image](https://user-images.githubusercontent.com/76420081/120581856-7a26bf00-c466-11eb-8f8c-b733ecd01ac1.png)
-![image](https://user-images.githubusercontent.com/76420081/120581988-b0643e80-c466-11eb-84aa-44427d992bd5.png)
 ![image](https://user-images.githubusercontent.com/76420081/120586763-0fc64c80-c46f-11eb-9510-e145e2632da7.png)
 ![image](https://user-images.githubusercontent.com/76420081/120582008-b5c18900-c466-11eb-96a4-b0e140c4edb0.png)
 ![image](https://user-images.githubusercontent.com/76420081/120581769-55324c00-c466-11eb-9244-8088cfabeb70.png)
@@ -126,15 +125,27 @@ EOF
 
 ```
 
-* 부하테스터 siege 툴을 통한 서킷 브레이커 동작을 확인한다.
+- 부하테스터 siege 툴을 통한 서킷 브레이커 동작을 확인한다.
   - 동시사용자 100명
   - 60초 동안 실시
   - 결과 화면
 ![image](https://user-images.githubusercontent.com/76420081/120583151-a6433f80-c468-11eb-81f7-f9a022c23148.png)
 ![image](https://user-images.githubusercontent.com/76420081/120583180-ae9b7a80-c468-11eb-97cc-5c6368d8bf29.png)
+
 ```
 siege -c100 -t60S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
 ```
+
+- 서킷 브레이커 DestinationRule 삭제 
+  - management에 적용된 서킷 브레이커 DestinationRule을 삭제하고 다시 부하를 주어 결과를 확인한다.    
+```
+kubectl delete dr --all;
+siege -c100 -t60S  -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-northeast-2.elb.amazonaws.com:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SK_Imme_Station'
+```
+
+  - 아래와 같이 management서비스에서 모든 요청을 처리하여 200응답을 주는것을 확인하였다.
+  ![image](https://user-images.githubusercontent.com/76420081/120588830-d55eae80-c472-11eb-8b7a-847d23d94a8e.png)
+  ![image](https://user-images.githubusercontent.com/76420081/120588943-0b039780-c473-11eb-8641-a325aafe2676.png)
 
 ### Liveness
 pod의 container가 정상적으로 기동되는지 확인하여, 비정상 상태인 경우 pod를 재기동하도록 한다.   
