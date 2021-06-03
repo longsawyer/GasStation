@@ -38,8 +38,8 @@
       - 배차
       - 본사ERP
       - 비고
-        - 구 시스템들 역시 MSMQ로 시스템이 격리되어 있으며, 어찌보면 옛날기술도 구현된 MSA로 볼 수도 있다
-        - 타 시스템들이 장애생겨도, 각각 독립운영가능했었다 (실 현업요구사항이였음)
+        - 구 시스템들도 MSMQ로 시스템 격리되어 있으며, 옛날기술도 구현된 MSA로 볼 수도 있다
+        - 타 시스템들이 장애생겨도, 각각 독립운영가능하다
 
 ![image](https://user-images.githubusercontent.com/76420081/120093071-af739a00-c152-11eb-89cf-e3232023e7bd.png)
 
@@ -149,13 +149,11 @@
 
 # 분석/설계
 
-
 ## AS-IS 조직 (Horizontally-Aligned)
 ![as_is](https://user-images.githubusercontent.com/76420081/120093786-886b9700-c157-11eb-9775-fd865b4cb781.png)
 
 ## TO-BE 조직 (Vertically-Aligned)
 ![to_be](https://user-images.githubusercontent.com/76420081/120093800-9ae5d080-c157-11eb-8058-99b87b60bddd.png)
-
 
 ## Event Storming 결과
 * MSAEz 로 모델링한 이벤트스토밍 결과:  
@@ -232,25 +230,22 @@
 
 ![hexagonal2](https://user-images.githubusercontent.com/76420081/120096055-4a28a480-c164-11eb-86d6-4fc52c86db3e.png)
 
-
-
 # 구현:
 분석/설계 단계에서 도출된 헥사고날 아키텍처에 따라, 각 BC별로 대변되는 마이크로 서비스들을 스프링부트로 구현하였다. 구현한 각 서비스를 로컬에서 실행하는 방법은 아래와 같다 (각자의 포트넘버는 8081 ~ 8083 이다)
 
+  - Local
 ```
-- Local
-	cd Order
-	mvn spring-boot:run
+cd Order
+mvn spring-boot:run
 
-	cd Station
-	mvn spring-boot:run
+cd Station
+mvn spring-boot:run
 
-	cd POS
-	mvn spring-boot:run
-	
-	cd Logistics
-	mvn spring-boot:run
+cd POS
+mvn spring-boot:run
 
+cd Logistics
+mvn spring-boot:run
 
 - EKS : CI/CD 통해 빌드/배포 ("운영 > CI-CD 설정" 부분 참조)
 ```
@@ -268,7 +263,6 @@ import gasstation.event.Ordered;
 
 /**
  * 주문
- * @author Administrator
  */
 @Entity
 @Table(name="T_ORDER")
@@ -289,7 +283,6 @@ public class Order {
         BeanUtils.copyProperties(this, ordered);
         ordered.publishAfterCommit();
     }
-   
     ...
 }
 ```
@@ -452,8 +445,6 @@ public class Product {
 ```
 ![image](https://user-images.githubusercontent.com/76420081/120100025-81ee1700-c179-11eb-83b4-b5b674793f44.png)
 
-
-
 ## 동기식 호출과 Fallback 처리
 
 - POS에서 매출처리시, 즉시 점포시스템(BOS)에서 즉시 재고감소처리를 한다.
@@ -537,7 +528,6 @@ package gasstation.policy;
 
 /**
  * 판매뷰 핸들러
- * @author Administrator
  *
  */
 @Service
@@ -920,6 +910,9 @@ http -f POST http://localhost:8080/stocks/confirmStock orderId=1
   - Spring FeignClient + Hystrix 옵션을 사용할 경우, 도메인 로직과 부가기능 로직이 서비스에 같이 구현된다.
   - istio를 사용해서 서킷 브레이킹 적용이 가능하다
 
+##### 각 도구설치법
+https://github.com/longsawyer/gasstation/issues/8
+
 ##### istio 설치
 * 윈도우용 설치 
     * https://github.com/istio/istio/releases 
@@ -1089,7 +1082,6 @@ kubectl get hpa order -w
 - 사용자 50명으로 워크로드를 3분 동안 걸어준다.
 ```
 siege -c50 -t180S  -v "http://127.0.0.1:8080/orders/placeOrder POST productId=CD1001&qty=20000&destAddr=SKImme"
-
 ```
 
 - 오토스케일 발생하지 않음(siege 실행 결과 오류 없이 수행됨 : Availability 100%)
@@ -1245,35 +1237,35 @@ CloudWatch Logs 수집, 아카이브 스토리지 및 데이터 스캔 요금이
 ```
 
 ### 2. Worker Node 모니터링
-
 - 쿠버네티스 모니터링 솔루션 중에 가장 인기 많은 것은 Heapster와 Prometheus 이다.
 - Heapster는 쿠버네티스에서 기본적으로 제공이 되며, 클러스터 내의 모니터링과 이벤트 데이터를 수집한다.
 - Prometheus는 CNCF에 의해 제공이 되며, 쿠버네티스의 각 다른 객체와 구성으로부터 리소스 사용을 수집할 수 있다.
-
-- 쿠버네티스에서 로그를 수집하는 가장 흔한 방법은 fluentd를 사용하는 Elasticsearch 이며, fluentd는 node에서 에이전트로 작동하며 커스텀 설정이 가능하다.
-
+- 쿠버네티스에서 fluentd를 사용하는 Elastic search를 사용하여 주로 로그수집하며, fluentd는 node에서 에이전트로 작동하며 커스텀 설정이 가능하다.
 - 그 외 오픈소스를 활용하여 Worker Node 모니터링이 가능하다. 아래는 istio, mixer, grafana, kiali를 사용한 예이다.
-
 ```
 아래 내용 출처: https://bcho.tistory.com/1296?category=731548
-
 ```
-- 마이크로 서비스에서 문제점중의 하나는 서비스가 많아 지면서 어떤 서비스가 어떤 서비스를 부르는지 의존성을 알기가 어렵고, 각 서비스를 개별적으로 모니터링 하기가 어렵다는 문제가 있다. Istio는 네트워크 트래픽을 모니터링함으로써, 서비스간에 호출 관계가 어떻게 되고, 서비스의 응답 시간, 처리량등의 다양한 지표를 수집하여 모니터링할 수 있다.
+
+- 마이크로 서비스는 서비스가 많아지면 
+  - 서버스간 의존성을 알기가 어렵고, 
+  - 각 서비스를 개별적으로 모니터링 하기가 어렵다. 
+  - Istio는 네트워크 트래픽을 모니터링함으로써, 서비스간 호출 관계/서비스 응답시간/처리량 등 다양한 지표를 모니터링할 수 있다.
 
 ![image](https://user-images.githubusercontent.com/64656963/86347967-ff738380-bc99-11ea-9b5e-6fb94dd4107a.png)
 
-- 서비스 A가 서비스 B를 호출할때 호출 트래픽은 각각의 envoy 프록시를 통하게 되고, 호출을 할때, 응답 시간과 서비스의 처리량이 Mixer로 전달된다. 전달된 각종 지표는 Mixer에 연결된 Logging Backend에 저장된다.
-
-- Mixer는 위의 그림과 같이 플러그인이 가능한 아답터 구조로, 운영하는 인프라에 맞춰서 로깅 및 모니터링 시스템을 손쉽게 변환이 가능하다.  쿠버네티스에서 많이 사용되는 Heapster나 Prometheus에서 부터 구글 클라우드의 StackDriver 그리고, 전문 모니터링 서비스인 Datadog 등으로 저장이 가능하다.
-
+- 서비스 A가 서비스 B를 호출할때 호출 트래픽은 각각의 envoy 프록시를 통하며, 응답 시간과 서비스의 처리량이 Mixer로 전달된다. 
+- 전달된 각종 지표는 Mixer에 연결된 Logging Backend에 저장된다.
+- Mixer는 플러그인이 가능한 아답터로, 운영하는 인프라에 맞게 로깅 및 모니터링 시스템을 손쉽게 변환이 가능하다.  
+- 쿠버네티스에서 많이 사용되는 Heapster나 Prometheus에서부터 구글 클라우드의 StackDriver 그리고, 전문 모니터링 서비스인 Datadog 등으로 저장이 가능하다. <br>
 ![image](https://user-images.githubusercontent.com/64656963/86348023-14501700-bc9a-11ea-9759-a40679a6a61b.png)
 
-- 이렇게 저장된 지표들은 여러 시각화 도구를 이용해서 시각화 될 수 있는데, 아래 그림은 Grafana를 이용해서 서비스의 지표를 시각화 한 그림이다.
-
+- 이렇게 저장된 지표들은 도구를 이용해서 시각화 될 수 있는데, 아래는 Grafana를 사용하여 지표를 시각하였다
 ![image](https://user-images.githubusercontent.com/64656963/86348092-25992380-bc9a-11ea-9d7b-8a7cdedc11fc.png)
 
-- 그리고 근래에 소개된 오픈소스 중에서 흥미로운 오픈 소스중의 하나가 Kiali (https://www.kiali.io/)라는 오픈소스인데, Istio에 의해서 수집된 각종 지표를 기반으로, 서비스간의 관계를 아래 그림과 같이 시각화하여 나타낼 수 있다.  아래는 그림이라서 움직이는 모습이 보이지 않지만 실제로 트래픽이 흘러가는 경로로 에니메이션을 이용하여 표현하고 있고, 서비스의 각종 지표, 처리량, 정상 여부, 응답 시간등을 손쉽게 표현해 준다.
-
+- 근래 오픈소스 중에서 Kiali (https://www.kiali.io/)라는 오픈소스가 주목받고 있다.
+  - Istio에 의해서 수집된 각종 지표를 기반으로, 서비스간의 관계를 아래 그림과 같이 시각화하여 나타낼 수 있다.  
+  - 실제로 트래픽이 흘러가는 경로로 에니메이션을 이용하여 표현하고 있고, 
+  - 서비스의 각종 지표, 처리량, 정상여부, 응답시간등을 손쉽게 표현해 준다.
 ![image](https://user-images.githubusercontent.com/64656963/86348145-3a75b700-bc9a-11ea-8477-e7e7178c51fe.png)
 
 
