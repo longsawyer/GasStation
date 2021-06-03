@@ -209,10 +209,11 @@ kubectl get pods
 
 
 ### 오토스케일 아웃
-- 주문 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다. 설정은 CPU 사용량이 1프로를 넘어서면 replica 를 10개까지 늘려준다.
+- 주문 서비스에 대한 replica 를 동적으로 늘려주도록 HPA 를 설정한다.
+- 설정은 CPU 사용량이 10프로를 넘어서면 replica 를 10개까지 늘려준다.
   - 쿠버 
 ```
-kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=1
+kubectl autoscale deploy order --min=1 --max=10 --cpu-percent=10
 ```
 
   - deployment.yml
@@ -243,9 +244,27 @@ siege -r 2000 -c 200 -v -v 'http://a532a43b1b8b845799bc8adb11b6f8ec-234283.ap-no
 ```
 
 - 오토스케일 발생하지 않음(siege 실행 결과 오류 없이 수행됨 : Availability 100%)
-- 서비스에 복잡한 비즈니스 로직이 포함된 것이 아니어서, CPU 부하를 주지 못한 것으로 추정된다.
-
+- autoscale 대상이 unknown이며, 확인결과 메트릭스 서버 설치필요함
 ![image](https://user-images.githubusercontent.com/76420081/120590433-7babb380-c475-11eb-9cf7-2def459901b4.png)
+
+
+- 매트릭스 서버설치후
+```
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+kubectl get deployment metrics-server -n kube-system
+```
+![image](https://user-images.githubusercontent.com/76420081/120592242-7c921480-c478-11eb-8018-e88b4e3d6b89.png)
+![image](https://user-images.githubusercontent.com/76420081/120592349-ac411c80-c478-11eb-8b8e-dc123a237b61.png)
+![image](https://user-images.githubusercontent.com/76420081/120592438-d85c9d80-c478-11eb-86f7-cac0ca6f6373.png)
+![image](https://user-images.githubusercontent.com/76420081/120592581-122da400-c479-11eb-8ac7-2b8051bc22bb.png)
+
+기타명령(필요시)
+```
+kubectl get hpa
+kubectl delete hpa NAME-OF-HPA
+```
+![image](https://user-images.githubusercontent.com/76420081/120591176-b104d100-c476-11eb-8f8e-128cfd100474.png)
+
 
 ## 무정지 재배포
 * 먼저 무정지 재배포가 100% 되는 것인지 확인하기 위해서 Autoscaler 이나 서킷브레이커 설정을 제거함
